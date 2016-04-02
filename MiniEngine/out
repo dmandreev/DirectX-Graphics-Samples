@@ -1,0 +1,154 @@
+On branch experimental
+Changes to be committed:
+  (use "git reset HEAD <file>..." to unstage)
+
+	new file:   ShaderPad/App.cpp
+	new file:   ShaderPad/App.h
+	new file:   ShaderPad/Assets/LockScreenLogo.scale-200.png
+	new file:   ShaderPad/Assets/SplashScreen.scale-200.png
+	new file:   ShaderPad/Assets/Square150x150Logo.scale-200.png
+	new file:   ShaderPad/Assets/Square44x44Logo.scale-200.png
+	new file:   ShaderPad/Assets/Square44x44Logo.targetsize-24_altform-unplated.png
+	new file:   ShaderPad/Assets/StoreLogo.png
+	new file:   ShaderPad/Assets/Wide310x150Logo.scale-200.png
+	new file:   ShaderPad/Common/DirectXHelper.h
+	new file:   ShaderPad/GameEngineImpl.cpp
+	new file:   ShaderPad/GameEngineImpl.h
+	new file:   ShaderPad/Models/sponza.h3d
+	new file:   ShaderPad/Package.appxmanifest
+	new file:   ShaderPad/ShaderPad_VS14_UWP.sln
+	new file:   ShaderPad/ShaderPad_VS14_UWP.vcxproj
+	new file:   ShaderPad/ShaderPad_VS14_UWP.vcxproj.filters
+	new file:   ShaderPad/ShaderPad_VS14_UWP_TemporaryKey.pfx
+	new file:   ShaderPad/Shaders/DepthViewerPS.hlsl
+	new file:   ShaderPad/Shaders/DepthViewerVS.hlsl
+	new file:   ShaderPad/Shaders/ModelViewerPS.hlsl
+	new file:   ShaderPad/Shaders/ModelViewerRS.hlsli
+	new file:   ShaderPad/Shaders/ModelViewerVS.hlsl
+	new file:   ShaderPad/Textures/Models/background.DDS
+	new file:   ShaderPad/Textures/Models/background_normal.DDS
+	new file:   ShaderPad/Textures/Models/chain_texture.DDS
+	new file:   ShaderPad/Textures/Models/chain_texture_normal.DDS
+	new file:   ShaderPad/Textures/Models/gi_flag.DDS
+	new file:   ShaderPad/Textures/Models/lion.DDS
+	new file:   ShaderPad/Textures/Models/lion_normal.DDS
+	new file:   ShaderPad/Textures/Models/spnza_bricks_a.DDS
+	new file:   ShaderPad/Textures/Models/spnza_bricks_a_normal.DDS
+	new file:   ShaderPad/Textures/Models/spnza_bricks_a_specular.DDS
+	new file:   ShaderPad/Textures/Models/sponza_arch.DDS
+	new file:   ShaderPad/Textures/Models/sponza_arch_normal.DDS
+	new file:   ShaderPad/Textures/Models/sponza_arch_specular.DDS
+	new file:   ShaderPad/Textures/Models/sponza_ceiling_a.DDS
+	new file:   ShaderPad/Textures/Models/sponza_ceiling_a_specular.DDS
+	new file:   ShaderPad/Textures/Models/sponza_column_a.DDS
+	new file:   ShaderPad/Textures/Models/sponza_column_a_normal.DDS
+	new file:   ShaderPad/Textures/Models/sponza_column_a_specular.DDS
+	new file:   ShaderPad/Textures/Models/sponza_column_b.DDS
+	new file:   ShaderPad/Textures/Models/sponza_column_b_normal.DDS
+	new file:   ShaderPad/Textures/Models/sponza_column_b_specular.DDS
+	new file:   ShaderPad/Textures/Models/sponza_column_c.DDS
+	new file:   ShaderPad/Textures/Models/sponza_column_c_normal.DDS
+	new file:   ShaderPad/Textures/Models/sponza_column_c_specular.DDS
+	new file:   ShaderPad/Textures/Models/sponza_curtain.DDS
+	new file:   ShaderPad/Textures/Models/sponza_curtain_blue.DDS
+	new file:   ShaderPad/Textures/Models/sponza_curtain_green.DDS
+	new file:   ShaderPad/Textures/Models/sponza_details.DDS
+	new file:   ShaderPad/Textures/Models/sponza_details_specular.DDS
+	new file:   ShaderPad/Textures/Models/sponza_fabric.DDS
+	new file:   ShaderPad/Textures/Models/sponza_fabric_blue.DDS
+	new file:   ShaderPad/Textures/Models/sponza_fabric_green.DDS
+	new file:   ShaderPad/Textures/Models/sponza_fabric_specular.DDS
+	new file:   ShaderPad/Textures/Models/sponza_flagpole.DDS
+	new file:   ShaderPad/Textures/Models/sponza_flagpole_specular.DDS
+	new file:   ShaderPad/Textures/Models/sponza_floor_a.DDS
+	new file:   ShaderPad/Textures/Models/sponza_floor_a_specular.DDS
+	new file:   ShaderPad/Textures/Models/sponza_roof.DDS
+	new file:   ShaderPad/Textures/Models/sponza_thorn.DDS
+	new file:   ShaderPad/Textures/Models/sponza_thorn_normal.DDS
+	new file:   ShaderPad/Textures/Models/sponza_thorn_specular.DDS
+	new file:   ShaderPad/Textures/Models/vase.DDS
+	new file:   ShaderPad/Textures/Models/vase_hanging.DDS
+	new file:   ShaderPad/Textures/Models/vase_normal.DDS
+	new file:   ShaderPad/Textures/Models/vase_plant.DDS
+	new file:   ShaderPad/Textures/Models/vase_plant_specular.DDS
+	new file:   ShaderPad/Textures/Models/vase_round.DDS
+	new file:   ShaderPad/Textures/Models/vase_round_normal.DDS
+	new file:   ShaderPad/Textures/Models/vase_round_specular.DDS
+	new file:   ShaderPad/Textures/Models/white.DDS
+	new file:   ShaderPad/Textures/default.DDS
+	new file:   ShaderPad/Textures/default_normal.DDS
+	new file:   ShaderPad/Textures/default_specular.DDS
+	new file:   ShaderPad/Textures/fire.dds
+	new file:   ShaderPad/Textures/smoke.dds
+	new file:   ShaderPad/Textures/sparkTex.dds
+	new file:   ShaderPad/pch.cpp
+	new file:   ShaderPad/pch.h
+
+Changes not staged for commit:
+  (use "git add/rm <file>..." to update what will be committed)
+  (use "git checkout -- <file>..." to discard changes in working directory)
+
+	deleted:    ShaderPad/Models/sponza.h3d
+	deleted:    ShaderPad/Textures/Models/background.DDS
+	deleted:    ShaderPad/Textures/Models/background_normal.DDS
+	deleted:    ShaderPad/Textures/Models/chain_texture.DDS
+	deleted:    ShaderPad/Textures/Models/chain_texture_normal.DDS
+	deleted:    ShaderPad/Textures/Models/gi_flag.DDS
+	deleted:    ShaderPad/Textures/Models/lion.DDS
+	deleted:    ShaderPad/Textures/Models/lion_normal.DDS
+	deleted:    ShaderPad/Textures/Models/spnza_bricks_a.DDS
+	deleted:    ShaderPad/Textures/Models/spnza_bricks_a_normal.DDS
+	deleted:    ShaderPad/Textures/Models/spnza_bricks_a_specular.DDS
+	deleted:    ShaderPad/Textures/Models/sponza_arch.DDS
+	deleted:    ShaderPad/Textures/Models/sponza_arch_normal.DDS
+	deleted:    ShaderPad/Textures/Models/sponza_arch_specular.DDS
+	deleted:    ShaderPad/Textures/Models/sponza_ceiling_a.DDS
+	deleted:    ShaderPad/Textures/Models/sponza_ceiling_a_specular.DDS
+	deleted:    ShaderPad/Textures/Models/sponza_column_a.DDS
+	deleted:    ShaderPad/Textures/Models/sponza_column_a_normal.DDS
+	deleted:    ShaderPad/Textures/Models/sponza_column_a_specular.DDS
+	deleted:    ShaderPad/Textures/Models/sponza_column_b.DDS
+	deleted:    ShaderPad/Textures/Models/sponza_column_b_normal.DDS
+	deleted:    ShaderPad/Textures/Models/sponza_column_b_specular.DDS
+	deleted:    ShaderPad/Textures/Models/sponza_column_c.DDS
+	deleted:    ShaderPad/Textures/Models/sponza_column_c_normal.DDS
+	deleted:    ShaderPad/Textures/Models/sponza_column_c_specular.DDS
+	deleted:    ShaderPad/Textures/Models/sponza_curtain.DDS
+	deleted:    ShaderPad/Textures/Models/sponza_curtain_blue.DDS
+	deleted:    ShaderPad/Textures/Models/sponza_curtain_green.DDS
+	deleted:    ShaderPad/Textures/Models/sponza_details.DDS
+	deleted:    ShaderPad/Textures/Models/sponza_details_specular.DDS
+	deleted:    ShaderPad/Textures/Models/sponza_fabric.DDS
+	deleted:    ShaderPad/Textures/Models/sponza_fabric_blue.DDS
+	deleted:    ShaderPad/Textures/Models/sponza_fabric_green.DDS
+	deleted:    ShaderPad/Textures/Models/sponza_fabric_specular.DDS
+	deleted:    ShaderPad/Textures/Models/sponza_flagpole.DDS
+	deleted:    ShaderPad/Textures/Models/sponza_flagpole_specular.DDS
+	deleted:    ShaderPad/Textures/Models/sponza_floor_a.DDS
+	deleted:    ShaderPad/Textures/Models/sponza_floor_a_specular.DDS
+	deleted:    ShaderPad/Textures/Models/sponza_roof.DDS
+	deleted:    ShaderPad/Textures/Models/sponza_thorn.DDS
+	deleted:    ShaderPad/Textures/Models/sponza_thorn_normal.DDS
+	deleted:    ShaderPad/Textures/Models/sponza_thorn_specular.DDS
+	deleted:    ShaderPad/Textures/Models/vase.DDS
+	deleted:    ShaderPad/Textures/Models/vase_hanging.DDS
+	deleted:    ShaderPad/Textures/Models/vase_normal.DDS
+	deleted:    ShaderPad/Textures/Models/vase_plant.DDS
+	deleted:    ShaderPad/Textures/Models/vase_plant_specular.DDS
+	deleted:    ShaderPad/Textures/Models/vase_round.DDS
+	deleted:    ShaderPad/Textures/Models/vase_round_normal.DDS
+	deleted:    ShaderPad/Textures/Models/vase_round_specular.DDS
+	deleted:    ShaderPad/Textures/Models/white.DDS
+	deleted:    ShaderPad/Textures/default.DDS
+	deleted:    ShaderPad/Textures/default_normal.DDS
+	deleted:    ShaderPad/Textures/default_specular.DDS
+	deleted:    ShaderPad/Textures/fire.dds
+	deleted:    ShaderPad/Textures/smoke.dds
+	deleted:    ShaderPad/Textures/sparkTex.dds
+
+Untracked files:
+  (use "git add <file>..." to include in what will be committed)
+
+	ModelConverter/helicopter.h3d
+	out
+
