@@ -302,7 +302,8 @@ void GameEngineImpl::RenderUI(class GraphicsContext& gfxContext)
 		gfxContext.SetRenderTarget(g_OverlayBuffer);// , g_SceneDepthBuffer, true);
 
 
-													//gfxContext.SetViewportAndScissor(m_MainViewport, m_MainScissor);
+
+		//gfxContext.SetScissor(m_MainScissor);
 
 
 
@@ -336,11 +337,19 @@ void GameEngineImpl::RenderUI(class GraphicsContext& gfxContext)
 		bool show_test_window = true;
 
 
-		ImGui::SetNextWindowSize(ImVec2(200, 100), ImGuiSetCond_FirstUseEver);
-		ImGui::Begin("Another Window", &show_test_window);
-		ImGui::Text("Hello");
-		ImGui::End();
+		ImGuiStyle& style = ImGui::GetStyle();
 
+		//ImGui::SetNextWindowSize(ImVec2(200, 100), ImGuiSetCond_FirstUseEver);
+		//ImGui::Begin("Another Window", &show_test_window);
+		//ImGui::Text("Hello");
+		//ImGui::DragFloat("Global Alpha", &style.Alpha, 0.005f, 0.20f, 1.0f, "%.2f");
+		//ImGui::End();
+
+		//style.WindowFillAlphaDefault = .3;
+		//ImGui::ShowStyleEditor(&style);
+
+		ImGui::ShowTestWindow();
+		
 
 		ImGui::Render();
 
@@ -357,6 +366,9 @@ void GameEngineImpl::RenderUI(class GraphicsContext& gfxContext)
 
 			for (int n = 0; n < drawData->CmdListsCount; n++)
 			{
+				int vtx_offset = 0;
+				int idx_offset = 0;
+
 				const ImDrawList* cmd_list = drawData->CmdLists[n];
 
 				size_t verticesCount = cmd_list->VtxBuffer.size();
@@ -381,15 +393,23 @@ void GameEngineImpl::RenderUI(class GraphicsContext& gfxContext)
 					}
 					else
 					{
-						const D3D12_RECT r = { (LONG)pcmd->ClipRect.x, (LONG)pcmd->ClipRect.y, (LONG)pcmd->ClipRect.z, (LONG)pcmd->ClipRect.w };
+						const D3D12_RECT r = { (LONG)pcmd->ClipRect.x, 
+							(LONG)pcmd->ClipRect.y, 
+							(LONG)pcmd->ClipRect.z, 
+							(LONG)pcmd->ClipRect.w };
 						gfxContext.SetScissor(r);
 
-						gfxContext.DrawIndexedInstanced(pcmd->ElemCount, 1, 0, 0, 0);
+
+						gfxContext.DrawIndexedInstanced(pcmd->ElemCount,1,idx_offset,vtx_offset,0);
 					}
+					idx_offset += pcmd->ElemCount;
 				}
+				vtx_offset += verticesCount;
 			}
 		}
 	}
+
+	gfxContext.SetViewportAndScissor(0, 0, g_OverlayBuffer.GetWidth(), g_OverlayBuffer.GetHeight());
 
 };
 
