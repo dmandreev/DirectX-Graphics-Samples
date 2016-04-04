@@ -89,6 +89,7 @@ namespace GameCore
 		UiContext.SetViewportAndScissor(0, 0, g_OverlayBuffer.GetWidth(), g_OverlayBuffer.GetHeight());
 		game.RenderUI(UiContext);
 
+
 		EngineTuning::Display( UiContext, 10.0f, 40.0f, 1900.0f, 1040.0f );
 
 		UiContext.Finish();

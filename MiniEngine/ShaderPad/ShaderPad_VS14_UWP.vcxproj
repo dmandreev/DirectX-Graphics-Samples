@@ -311,11 +311,21 @@
     <FxCompile Include="Shaders\DepthViewerVS.hlsl">
       <ShaderType>Vertex</ShaderType>
     </FxCompile>
+    <FxCompile Include="Shaders\ImguiPS.hlsl">
+      <ShaderType>Pixel</ShaderType>
+    </FxCompile>
+    <FxCompile Include="Shaders\ImguiVS.hlsl">
+      <ShaderType>Vertex</ShaderType>
+      <DisableOptimizations Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</DisableOptimizations>
+      <DisableOptimizations Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</DisableOptimizations>
+    </FxCompile>
     <FxCompile Include="Shaders\ModelViewerPS.hlsl">
       <ShaderType>Pixel</ShaderType>
     </FxCompile>
     <FxCompile Include="Shaders\ModelViewerVS.hlsl">
       <ShaderType>Vertex</ShaderType>
+      <DisableOptimizations Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</DisableOptimizations>
+      <DisableOptimizations Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</DisableOptimizations>
     </FxCompile>
   </ItemGroup>
   <ItemGroup>

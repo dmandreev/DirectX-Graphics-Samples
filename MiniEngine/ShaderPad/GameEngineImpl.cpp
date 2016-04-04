@@ -156,6 +156,7 @@ void GameEngineImpl::RenderScene(void)
 	psConstants.ambientLight = Vector3(0.2f, 0.2f, 0.2f);
 	psConstants.ShadowTexelSize = 1.0f / g_ShadowBuffer.GetWidth();
 
+	/*
 	{
 		ScopedTimer _prof(L"Z PrePass", gfxContext);
 
@@ -180,7 +181,7 @@ void GameEngineImpl::RenderScene(void)
 	}
 
 	SSAO::Render(gfxContext, m_Camera);
-
+	
 	if (!SSAO::DebugDraw)
 	{
 		ScopedTimer _prof(L"Main Render", gfxContext);
@@ -218,6 +219,7 @@ void GameEngineImpl::RenderScene(void)
 			g_ShadowBuffer.EndRendering(gfxContext);
 		}
 
+
 		if (SSAO::AsyncCompute)
 		{
 			gfxContext.Flush();
@@ -240,6 +242,12 @@ void GameEngineImpl::RenderScene(void)
 	ParticleEffects::Render(gfxContext, m_Camera, g_SceneColorBuffer, g_SceneDepthBuffer, g_LinearDepth);
 
 	MotionBlur::RenderCameraBlur(gfxContext, m_Camera);
+	*/
+	//---
+
+
+
+	//---
 
 	gfxContext.Finish();
 }

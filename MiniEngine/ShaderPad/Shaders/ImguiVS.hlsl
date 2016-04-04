@@ -45,6 +45,16 @@ struct VSInput
 	float3 bitangent;
 };
 
+//D3D12_INPUT_ELEMENT_DESC vertElem[] =
+//{
+//	{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+//	{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+//	{ "NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+//	{ "TANGENT", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+//	{ "BITANGENT", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 }
+//};
+
+
 StructuredBuffer<VSInput> vertexArray : register(t0);
 
 cbuffer StartVertex : register(b1)
@@ -58,11 +68,6 @@ struct VSOutput
 {
 	float4 position : SV_Position;
 	float2 texcoord0 : texcoord0;
-	float3 viewDir : texcoord1;
-	float3 shadowCoord : texcoord2;
-	float3 normal : normal;
-	float3 tangent : tangent;
-	float3 bitangent : bitangent;
 };
 
 [RootSignature(ModelViewer_RootSig)]
@@ -76,17 +81,12 @@ VSOutput main(uint vertexID : SV_VertexID)
 	VSInput vsInput = vertexArray[vertexID + baseVertex];
 #endif
 
+
 	VSOutput vsOutput;
 
-
-	vsOutput.position = mul(modelToProjection, float4(vsInput.position, 1.0));
+	vsOutput.position = mul(modelToProjection, float4(vsInput.position, 596));
+	//vsOutput.position = float4(vsInput.position, 1.0);
 	vsOutput.texcoord0 = vsInput.texcoord0;
-	vsOutput.viewDir = vsInput.position - ViewerPos;
-	vsOutput.shadowCoord = mul(modelToShadow, float4(vsInput.position, 1.0)).xyz;
-
-	vsOutput.normal = vsInput.normal;
-	vsOutput.tangent = vsInput.tangent;
-	vsOutput.bitangent = vsInput.bitangent;
 
 	return vsOutput;
 }

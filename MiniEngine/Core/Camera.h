@@ -93,7 +93,10 @@ namespace Math
 		// Controls the view-to-projection matrix
 		void SetPerspectiveMatrix( float verticalFovRadians, float aspectHeightOverWidth, float nearZClip, float farZClip );
 		void SetFOV( float verticalFovInRadians ) { m_VerticalFOV = verticalFovInRadians; UpdateProjMatrix(); }
-		void SetAspectRatio( float heightOverWidth ) { m_AspectRatio = heightOverWidth; UpdateProjMatrix(); }
+		void SetAspectRatio( float heightOverWidth ) 
+		{ 
+			m_AspectRatio = heightOverWidth; UpdateProjMatrix(); 
+		}
 		void SetZRange( float nearZ, float farZ) { m_NearClip = nearZ; m_FarClip = farZ; UpdateProjMatrix(); }
 		void ReverseZ( bool enable ) { m_ReverseZ = enable; UpdateProjMatrix(); }
 

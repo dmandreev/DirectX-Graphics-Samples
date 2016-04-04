@@ -13,6 +13,8 @@ using namespace Graphics;
 #include "CompiledShaders/ModelViewerVS.h"
 #include "CompiledShaders/ModelViewerPS.h"
 
+#include "CompiledShaders/ImguiPS.h"
+#include "CompiledShaders/ImguiVS.h"
 
 
 
@@ -34,6 +36,71 @@ public:
 	{
 		return ComPtr<IUnknown>(reinterpret_cast<IUnknown *>(Windows::UI::Core::CoreWindow::GetForCurrentThread()));
 	}
+
+	virtual void RenderUI(class GraphicsContext& gfxContext)
+	{
+		__declspec(align(16)) struct
+		{
+			Vector3 sunDirection;
+			Vector3 sunLight;
+			Vector3 ambientLight;
+			float ShadowTexelSize;
+		} psConstants;
+
+		psConstants.sunDirection = m_SunDirection;
+		psConstants.sunLight = Vector3(1.0f, 1.0f, 1.0f);
+		psConstants.ambientLight = Vector3(0.2f, 0.2f, 0.2f);
+		psConstants.ShadowTexelSize = 1.0f / g_ShadowBuffer.GetWidth();
+
+		{
+
+			gfxContext.SetRootSignature(m_RootSig);
+
+			ScopedTimer _prof(L"Imgui", gfxContext);
+			gfxContext.SetPipelineState(m_ImguiPSO);
+			gfxContext.SetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);
+
+
+
+			gfxContext.SetDynamicDescriptor(2, 0, imguiVertexBuffer.GetSRV());
+			gfxContext.SetIndexBuffer(imguiIndexBuffer.IndexBufferView());
+			//gfxContext.SetDepthStencilTarget(g_SceneDepthBuffer);
+			gfxContext.SetRenderTarget(g_OverlayBuffer);// , g_SceneDepthBuffer, true);
+
+
+			gfxContext.SetViewportAndScissor(m_MainViewport, m_MainScissor);
+
+
+			__declspec(align(64))  struct VSConstants
+			{
+				Matrix4 modelToProjection;
+				Matrix4 modelToShadow;
+				XMFLOAT3 viewerPos;
+			} vsConstants;
+			vsConstants.modelToProjection = Matrix4(kIdentity);
+			vsConstants.modelToShadow = m_SunShadow.GetShadowMatrix();
+			XMStoreFloat3(&vsConstants.viewerPos, m_Camera.GetPosition());
+
+			gfxContext.SetDynamicDescriptors(4, 0, 2, m_ExtraTextures);
+			gfxContext.SetDynamicConstantBufferView(0, sizeof(vsConstants), &vsConstants);
+			gfxContext.SetDynamicConstantBufferView(1, sizeof(psConstants), &psConstants);
+
+
+			gfxContext.SetConstants(5, 0);
+
+			gfxContext.DrawIndexed(3, 0);
+
+			/*
+			Context.SetDynamicDescriptor(0, 0, g_OverlayBuffer.GetSRV());
+
+			Context.SetPipelineState(s_BlendUIPSO);
+			Context.Draw(3);
+			*/
+
+		}
+
+	};
+
 
 	virtual void Startup(void) override
 	{
@@ -70,6 +137,75 @@ public:
 			{ "BITANGENT", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 }
 		};
 #endif
+
+
+		//-
+
+		m_ImguiPSO.SetRootSignature(m_RootSig);
+		m_ImguiPSO.SetRasterizerState(RasterizerTwoSided);
+		m_ImguiPSO.SetBlendState(BlendPreMultiplied);
+		m_ImguiPSO.SetDepthStencilState(DepthStateDisabled);
+		m_ImguiPSO.SetSampleMask(0xFFFFFFFF);
+
+		m_ImguiPSO.SetPrimitiveTopologyType(D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE);
+
+		m_ImguiPSO.SetRenderTargetFormat(g_OverlayBuffer.GetFormat(), DXGI_FORMAT_UNKNOWN);
+
+		m_ImguiPSO.SetVertexShader(g_pImguiVS, sizeof(g_pImguiVS));
+		m_ImguiPSO.SetPixelShader(g_pImguiPS, sizeof(g_pImguiPS));
+		m_ImguiPSO.Finalize();
+
+		struct float3
+		{
+			float x;
+			float y;
+			float z;
+		};
+
+		struct float2
+		{
+			float x;
+			float y;
+		};
+
+		struct VSInput
+		{
+			float3 position;               // Offset:    0
+			float2 texcoord0;              // Offset:   12
+			float3 normal;                 // Offset:   20
+			float3 tangent;                // Offset:   32
+			float3 bitangent;              // Offset:   44
+		};
+
+		VSInput *buf = (VSInput *)_aligned_malloc(sizeof(VSInput) * 3, 16);
+
+		memset(buf, 0, sizeof(VSInput) * 3);
+
+		buf[0].position.x = 1;
+		buf[0].position.y = 1;
+		buf[0].position.z = 0.98;
+
+		buf[1].position.x = 1;
+		buf[1].position.y = 100;
+		buf[1].position.z = 0.98;
+
+		buf[2].position.x = 100;
+		buf[2].position.y = 1;
+		buf[2].position.z = 0.98;
+
+		imguiVertexBuffer.Create(L"imguiVertexBuffer", 3, sizeof(VSInput), buf);
+		_aligned_free(buf);
+
+		__declspec(align(16)) uint16 idxs[3];
+		idxs[0] = 0;
+		idxs[1] = 1;
+		idxs[2] = 2;
+
+		imguiIndexBuffer.Create(L"imguiIndexBuffer", 3, sizeof(uint16_t), &idxs);
+
+		//-
+		
+
 
 		m_DepthPSO.SetRootSignature(m_RootSig);
 		m_DepthPSO.SetRasterizerState(RasterizerDefault);
@@ -215,6 +351,7 @@ private:
 	GraphicsPSO m_DepthPSO;
 	GraphicsPSO m_ModelPSO;
 	GraphicsPSO m_ShadowPSO;
+	GraphicsPSO m_ImguiPSO;
 
 	D3D12_CPU_DESCRIPTOR_HANDLE m_ExtraTextures[2];
 
@@ -222,6 +359,11 @@ private:
 
 	Vector3 m_SunDirection;
 	ShadowCamera m_SunShadow;
+
+
+
+	StructuredBuffer imguiVertexBuffer;
+	ByteAddressBuffer imguiIndexBuffer;
 
 
 };
