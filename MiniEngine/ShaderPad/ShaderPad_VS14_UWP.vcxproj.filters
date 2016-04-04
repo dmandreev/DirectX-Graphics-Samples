@@ -215,6 +215,9 @@
       <Filter>Shaders</Filter>
     </None>
     <None Include="ShaderPad_VS14_UWP_TemporaryKey.pfx" />
+    <None Include="Shaders\Imgui.hlsli">
+      <Filter>Shaders</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Shaders\ModelViewerVS.hlsl">

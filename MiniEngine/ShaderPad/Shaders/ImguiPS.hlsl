@@ -6,19 +6,9 @@
 // IMPLIED WARRANTIES OF FITNESS FOR A PARTICULAR
 // PURPOSE, MERCHANTABILITY, OR NON-INFRINGEMENT.
 //
-// Developed by Minigraph
-//
-// Author(s):  James Stanard
-//             Alex Nankervis
-//
 
-#include "ModelViewerRS.hlsli"
+#include "imgui.hlsli"
 
-struct VSOutput
-{
-	float4 pos : SV_Position;
-	float2 uv : TexCoord0;
-};
 
 cbuffer PSConstants : register(b0)
 {
@@ -33,7 +23,7 @@ cbuffer PSConstants : register(b0)
 Texture2D<float4> texDiffuse : register(t0);
 SamplerState sampler0 : register(s0);
 
-[RootSignature(ModelViewer_RootSig)]
+[RootSignature(Imgui_RootSig)]
 float4 main(VSOutput vsOutput) : SV_Target0
 {
 	return float4(vsOutput.pos.x, vsOutput.pos.y, 0.5,1);

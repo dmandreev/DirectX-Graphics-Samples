@@ -120,6 +120,9 @@ private:
 	D3D12_RECT m_MainScissor;
 
 	RootSignature m_RootSig;
+
+	RootSignature m_ImguiSig;
+
 	GraphicsPSO m_DepthPSO;
 	GraphicsPSO m_ModelPSO;
 	GraphicsPSO m_ShadowPSO;

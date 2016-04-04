@@ -306,15 +306,14 @@ void GameEngineImpl::RenderUI(class GraphicsContext& gfxContext)
 
 	{
 
-		gfxContext.SetRootSignature(m_RootSig);
+		gfxContext.SetRootSignature(m_ImguiSig);
 
 		ScopedTimer _prof(L"Imgui", gfxContext);
 		gfxContext.SetPipelineState(m_ImguiPSO);
 		gfxContext.SetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);
 
 
-
-		gfxContext.SetDynamicDescriptor(2, 0, imguiVertexBuffer.GetSRV());
+		gfxContext.SetVertexBuffer(0, imguiVertexBuffer.VertexBufferView());
 		gfxContext.SetIndexBuffer(imguiIndexBuffer.IndexBufferView());
 		//gfxContext.SetDepthStencilTarget(g_SceneDepthBuffer);
 		gfxContext.SetRenderTarget(g_OverlayBuffer);// , g_SceneDepthBuffer, true);
@@ -387,6 +386,19 @@ void GameEngineImpl::Startup(void)
 	m_RootSig.Finalize();
 #endif
 
+
+	m_ImguiSig.Reset(6, 2);
+	m_ImguiSig.InitStaticSampler(0, SamplerAnisoWrapDesc, D3D12_SHADER_VISIBILITY_PIXEL);
+	m_ImguiSig.InitStaticSampler(1, SamplerShadowDesc, D3D12_SHADER_VISIBILITY_PIXEL);
+	m_ImguiSig[0].InitAsConstantBuffer(0, D3D12_SHADER_VISIBILITY_VERTEX);
+	m_ImguiSig[1].InitAsConstantBuffer(0, D3D12_SHADER_VISIBILITY_PIXEL);
+	m_ImguiSig[2].InitAsBufferSRV(0, D3D12_SHADER_VISIBILITY_VERTEX);
+	m_ImguiSig[3].InitAsDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 0, 6, D3D12_SHADER_VISIBILITY_PIXEL);
+	m_ImguiSig[4].InitAsDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 64, 3, D3D12_SHADER_VISIBILITY_PIXEL);
+	m_ImguiSig[5].InitAsConstants(1, 1, D3D12_SHADER_VISIBILITY_VERTEX);
+	m_ImguiSig.Finalize(D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
+
+
 	DXGI_FORMAT ColorFormat = g_SceneColorBuffer.GetFormat();
 	DXGI_FORMAT DepthFormat = g_SceneDepthBuffer.GetFormat();
 	DXGI_FORMAT ShadowFormat = g_ShadowBuffer.GetFormat();
@@ -405,13 +417,24 @@ void GameEngineImpl::Startup(void)
 
 	//-imgui
 
-	m_ImguiPSO.SetRootSignature(m_RootSig);
+	D3D12_INPUT_ELEMENT_DESC vertElem[] =
+	{
+		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+		{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+		{ "NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+		{ "TANGENT", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+		{ "BITANGENT", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 }
+	};
+
+	m_ImguiPSO.SetRootSignature(m_ImguiSig);
 	m_ImguiPSO.SetRasterizerState(RasterizerTwoSided);
 	m_ImguiPSO.SetBlendState(BlendPreMultiplied);
 	m_ImguiPSO.SetDepthStencilState(DepthStateDisabled);
 	m_ImguiPSO.SetSampleMask(0xFFFFFFFF);
 
 	m_ImguiPSO.SetPrimitiveTopologyType(D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE);
+	m_ImguiPSO.SetInputLayout(_countof(vertElem), vertElem);
+
 
 	m_ImguiPSO.SetRenderTargetFormat(g_OverlayBuffer.GetFormat(), DXGI_FORMAT_UNKNOWN);
 

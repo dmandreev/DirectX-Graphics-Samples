@@ -332,6 +332,7 @@
       <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">true</DeploymentContent>
     </None>
     <None Include="ShaderPad_VS14_UWP_TemporaryKey.pfx" />
+    <None Include="Shaders\Imgui.hlsli" />
     <None Include="Shaders\ModelViewerRS.hlsli" />
   </ItemGroup>
   <ItemGroup>
