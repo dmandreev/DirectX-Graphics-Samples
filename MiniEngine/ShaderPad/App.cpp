@@ -100,6 +100,13 @@ void App::SetWindow(CoreWindow^ window)
 
 	window->PointerPressed +=
 		ref new TypedEventHandler<CoreWindow^, PointerEventArgs^>(this, &App::OnPointerPressed);
+
+	window->PointerReleased +=
+		ref new TypedEventHandler<CoreWindow^, PointerEventArgs^>(this, &App::OnPointerReleased);
+
+	window->PointerMoved +=
+		ref new TypedEventHandler<CoreWindow^, PointerEventArgs^>(this, &App::OnPointerMoved);
+
 }
 
 typedef struct _DIMOUSESTATE2 {
@@ -144,8 +151,16 @@ void App::OnKeyDown(
 			CoreDispatcherPriority::Normal,
 			ref new DispatchedHandler([this]()
 		{
-			CoreWindow::GetForCurrentThread()->PointerCursor = ref new CoreCursor(CoreCursorType::Arrow, 0);
-			m_tracking = false;
+			if (m_tracking)
+			{
+				CoreWindow::GetForCurrentThread()->PointerCursor = ref new CoreCursor(CoreCursorType::Arrow, 0);
+				m_tracking = false;
+			}
+			else
+			{
+				CoreWindow::GetForCurrentThread()->PointerCursor = nullptr;
+				m_tracking = true;
+			}
 		}));
 
 	}
@@ -156,14 +171,55 @@ void App::OnPointerPressed(
 	_In_ Windows::UI::Core::PointerEventArgs^ args
 	)
 {
-	CoreWindow::GetForCurrentThread()->Dispatcher->RunAsync(
-		CoreDispatcherPriority::Normal,
-		ref new DispatchedHandler([this]()
-	{
-		CoreWindow::GetForCurrentThread()->PointerCursor = nullptr;
-		m_tracking = true;
-	}));
+	gameEngineImpl.PointerPressed();
+}
 
+void App::OnPointerReleased(
+	_In_ Windows::UI::Core::CoreWindow^ sender,
+	_In_ Windows::UI::Core::PointerEventArgs^ args
+	)
+{
+	gameEngineImpl.PointerReleased();
+}
+
+
+
+void App::OnPointerMoved(
+	_In_ Windows::UI::Core::CoreWindow^ sender,
+	_In_ Windows::UI::Core::PointerEventArgs^ args
+	)
+{
+	auto a=sender->PointerPosition.X- sender->Bounds.X;
+	auto b=sender->PointerPosition.Y- sender->Bounds.Y;
+
+	sender->Bounds.X;
+
+	/*
+	auto ptr = args->CurrentPoint;
+
+
+	if (ptr.PointerDeviceType == Windows.Devices.Input.PointerDeviceType.Mouse)
+	{
+		// To get mouse state, we need extended pointer details.
+		// We get the pointer info through the getCurrentPoint method
+		// of the event argument. 
+		Windows.UI.Input.PointerPoint ptrPt = e.GetCurrentPoint(Target);
+		if (ptrPt.Properties.IsLeftButtonPressed)
+		{
+			eventLog.Text += "\nLeft button: " + ptrPt.PointerId;
+		}
+		if (ptrPt.Properties.IsMiddleButtonPressed)
+		{
+			eventLog.Text += "\nWheel button: " + ptrPt.PointerId;
+		}
+		if (ptrPt.Properties.IsRightButtonPressed)
+		{
+			eventLog.Text += "\nRight button: " + ptrPt.PointerId;
+		}
+	}
+
+	int q = 15;
+	*/
 }
 
 
@@ -189,6 +245,7 @@ void App::Run()
 {
 
 	OnWindowSizeChanged(CoreWindow::GetForCurrentThread(), nullptr);
+
 
 	while (!m_windowClosed)
 	{
@@ -277,6 +334,8 @@ void App::OnWindowSizeChanged(CoreWindow^ sender, WindowSizeChangedEventArgs^ ar
 	auto height= floorf(sender->Bounds.Height * currentDisplayInformation->LogicalDpi / 96.0f + 0.5f);
 	
 	Graphics::Resize((uint32_t)width, (uint32_t)height);
+
+	gameEngineImpl.SetDpi(currentDisplayInformation->LogicalDpi);
 }
 
 void App::OnVisibilityChanged(CoreWindow^ sender, VisibilityChangedEventArgs^ args)

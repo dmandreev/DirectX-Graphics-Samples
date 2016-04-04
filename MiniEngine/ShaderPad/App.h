@@ -57,8 +57,20 @@ namespace ShaderPad
 			_In_ Windows::UI::Core::PointerEventArgs^ args
 			);
 
+		void OnPointerReleased(
+			_In_ Windows::UI::Core::CoreWindow^ sender,
+			_In_ Windows::UI::Core::PointerEventArgs^ args
+			);
+
+
+		void OnPointerMoved(
+			_In_ Windows::UI::Core::CoreWindow^ sender,
+			_In_ Windows::UI::Core::PointerEventArgs^ args
+			);
+
 
 	private:
+
 
 		bool m_windowClosed;
 		bool m_windowVisible;

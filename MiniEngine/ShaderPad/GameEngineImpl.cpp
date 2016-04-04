@@ -22,10 +22,23 @@ void GameEngineImpl::Update(float deltaT)
 {
 	ScopedTimer _prof(L"Update State");
 
+	auto window=Windows::UI::Core::CoreWindow::GetForCurrentThread();
+
+	//auto mousePosX = window->PointerPosition.X; //-window->Bounds.X;
+	//auto mousePosY = window->PointerPosition.Y;// -window->Bounds.Y;
+
+
+	auto mousePosX = floorf((window->PointerPosition.X - window->Bounds.X) * m_dpi / 96.0f);
+	auto mousePosY = floorf((window->PointerPosition.Y - window->Bounds.Y)* m_dpi / 96.0f );
+
 
 	ImGuiIO& io = ImGui::GetIO();
 	io.DisplaySize = ImVec2(g_OverlayBuffer.GetWidth(), g_OverlayBuffer.GetHeight());
 	io.DeltaTime = deltaT;
+	io.MousePos = ImVec2(mousePosX, mousePosY);
+
+	io.MouseDown[0] = pointerPressed;
+
 	ImGui::NewFrame();
 
 	
@@ -337,11 +350,6 @@ void GameEngineImpl::RenderUI(class GraphicsContext& gfxContext)
 
 		if (drawData->CmdListsCount > 0)
 		{
-			//DynAlloc TempSpace = m_CpuLinearAllocator.Allocate(NumBytes, 512);
-			//SIMDMemCopy(TempSpace.DataPtr, BufferData, Math::DivideByMultiple(NumBytes, 16));
-			//CopyBufferRegion(Dest, DestOffset, TempSpace.Buffer, TempSpace.Offset, NumBytes);
-
-
 			for (int n = 0; n < drawData->CmdListsCount; n++)
 			{
 
@@ -377,7 +385,6 @@ void GameEngineImpl::RenderUI(class GraphicsContext& gfxContext)
 						gfxContext.SetScissor(r);
 
 						gfxContext.DrawIndexedInstanced(pcmd->ElemCount, 1, 0, 0, 0);
-
 					}
 				}
 			}
@@ -449,7 +456,7 @@ void GameEngineImpl::Startup(void)
 
 	//-imgui
 
-	D3D12_INPUT_ELEMENT_DESC vertElem[] =
+	D3D12_INPUT_ELEMENT_DESC imguiVertElem[] =
 	{
 		{ "POSITION", 0, DXGI_FORMAT_R32G32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
 		{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
@@ -492,7 +499,7 @@ void GameEngineImpl::Startup(void)
 	m_ImguiPSO.SetSampleMask(0xFFFFFFFF);
 
 	m_ImguiPSO.SetPrimitiveTopologyType(D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE);
-	m_ImguiPSO.SetInputLayout(_countof(vertElem), vertElem);
+	m_ImguiPSO.SetInputLayout(_countof(imguiVertElem), imguiVertElem);
 
 
 	m_ImguiPSO.SetRenderTargetFormat(g_OverlayBuffer.GetFormat(), DXGI_FORMAT_UNKNOWN);
@@ -501,65 +508,13 @@ void GameEngineImpl::Startup(void)
 	m_ImguiPSO.SetPixelShader(g_pImguiPS, sizeof(g_pImguiPS));
 	m_ImguiPSO.Finalize();
 
-	struct float3
-	{
-		float x;
-		float y;
-		float z;
-	};
 
-	struct float2
-	{
-		float x;
-		float y;
-	};
-
-	struct VSInput
-	{
-		float2 pos;               
-		float2 uv;              
-		unsigned int color;
-	};
-
-	VSInput *buf = (VSInput *)_aligned_malloc(sizeof(VSInput) * 3, 16);
-
-	memset(buf, 0, sizeof(VSInput) * 3);
-
-	buf[0].pos.x = g_OverlayBuffer.GetWidth()/2.0f;
-	buf[0].pos.y = g_OverlayBuffer.GetHeight() / 2.0f;
-
-	buf[0].uv.x = 2;
-	buf[0].uv.y = 3;
-
-	buf[0].color = 0x018003FF;
-
-	buf[1].pos.x = g_OverlayBuffer.GetWidth() / 2.0f;
-	buf[1].pos.y = 0;
-	buf[1].color = 0x011003FF;
-
-	buf[2].pos.x = 0;
-	buf[2].pos.y = g_OverlayBuffer.GetHeight() / 2.0f;
-	buf[2].color = 0xFF1003FF;
-
-
-	imguiVertexBuffer.Create(L"imguiVertexBuffer", 30000, sizeof(VSInput), nullptr);
-
-
-
-
-	_aligned_free(buf);
-
-	__declspec(align(16)) uint16 idxs[3];
-	idxs[0] = 0;
-	idxs[1] = 1;
-	idxs[2] = 2;
-
-	imguiIndexBuffer.Create(L"imguiIndexBuffer", 30000, sizeof(uint16_t), nullptr);
+	imguiVertexBuffer.Create(L"imguiVertexBuffer", UINT16_MAX, sizeof(ImDrawVert), nullptr);
+	imguiIndexBuffer.Create(L"imguiIndexBuffer", UINT16_MAX, sizeof(ImDrawIdx), nullptr);
 
 
 	ImGuiIO& io = ImGui::GetIO();
 
-	//io.RenderDrawListsFn = ImGui_ImplDX12_RenderDrawLists;
 
 	io.MemAllocFn = MemAllocFn;
 	io.MemFreeFn = MemFreeFn;

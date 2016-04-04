@@ -30,7 +30,21 @@ public:
 
 	}
 
+	void SetDpi(float dpi)
+	{
+		m_dpi = dpi;
+	}
 
+
+	void PointerPressed()
+	{
+		pointerPressed = true;
+	}
+
+	void PointerReleased()
+	{
+		pointerPressed = false;
+	}
 
 	virtual ComPtr<IUnknown> GetMainWindow(void) override
 	{
@@ -57,6 +71,9 @@ public:
 	virtual void Startup(void) override;
 
 private:
+
+	float m_dpi = 96.0f;
+	bool pointerPressed = false;
 
 	void RenderObjects(GraphicsContext& Context, const Matrix4& ViewProjMat);
 	void CreateParticleEffects()
