@@ -18,14 +18,15 @@
 // A faster version of memcopy that uses SSE instructions.  TODO:  Write an ARM variant if necessary.
 void SIMDMemCopy( void* __restrict _Dest, const void* __restrict _Source, size_t NumQuadwords )
 {
+	ASSERT(Math::IsAligned(_Dest, 16));
+	ASSERT(Math::IsAligned(_Source, 16));
+
 #ifdef _M_ARM
 	for (size_t i = 0; i < NumQuadwords; i++)
 	{
 		((XMVECTOR *)_Dest)[i] = ((XMVECTOR *)_Source)[i];
 	}
 #else
-	ASSERT(Math::IsAligned(_Dest, 16));
-	ASSERT(Math::IsAligned(_Source, 16));
 
 	__m128i* __restrict Dest = (__m128i* __restrict)_Dest;
 	const __m128i* __restrict Source = (const __m128i* __restrict)_Source;

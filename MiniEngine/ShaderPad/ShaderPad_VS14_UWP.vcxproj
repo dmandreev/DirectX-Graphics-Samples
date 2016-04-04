@@ -344,6 +344,7 @@
     </FxCompile>
     <FxCompile Include="Shaders\ImguiPS.hlsl">
       <ShaderType>Pixel</ShaderType>
+      <DisableOptimizations Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</DisableOptimizations>
     </FxCompile>
     <FxCompile Include="Shaders\ImguiVS.hlsl">
       <ShaderType>Vertex</ShaderType>

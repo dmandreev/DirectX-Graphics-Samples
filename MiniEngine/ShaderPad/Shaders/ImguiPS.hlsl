@@ -26,6 +26,7 @@ SamplerState sampler0 : register(s0);
 [RootSignature(Imgui_RootSig)]
 float4 main(VSOutput vsOutput) : SV_Target0
 {
-	return float4(vsOutput.pos.x, vsOutput.pos.y, 0.5,1);
+	float4 tex = texDiffuse.Sample(sampler0, vsOutput.uv);
+	return vsOutput.color; //* tex;
 }
 

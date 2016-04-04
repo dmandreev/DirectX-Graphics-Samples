@@ -13,8 +13,6 @@
 cbuffer VSConstants : register(b0)
 {
 	float4x4 modelToProjection;
-	float4x4 modelToShadow;
-	float3 ViewerPos;
 };
 
 
@@ -31,9 +29,9 @@ VSOutput main(VSInput vsInput)
 {
 	VSOutput vsOutput;
 
-	vsOutput.pos = mul(modelToProjection, float4(vsInput.pos.xy,1, 475));
-	//vsOutput.position = float4(vsInput.position, 1.0);
+	vsOutput.pos = mul(modelToProjection, float4(vsInput.pos.xy,0, 1));
 	vsOutput.uv = vsInput.uv;
+	vsOutput.color = vsInput.color;
 
 	return vsOutput;
 }

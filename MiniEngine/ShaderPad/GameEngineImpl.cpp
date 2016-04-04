@@ -16,31 +16,6 @@ NumVar ShadowDimY("Application/Shadow Dim Y", 3000, 1000, 10000, 100);
 NumVar ShadowDimZ("Application/Shadow Dim Z", 3000, 1000, 10000, 100);
 
 
-void ImGui_ImplDX12_RenderDrawLists(ImDrawData* _draw_data)
-{
-	{
-		float translate = -0.5f * 2.f;
-		const float L = 0.f;
-		const float R = ImGui::GetIO().DisplaySize.x;
-		const float B = ImGui::GetIO().DisplaySize.y;
-		const float T = 0.f;
-		const float mvp[4][4] =
-		{
-			{ 2.0f / (R - L),   0.0f,           0.0f,       0.0f },
-			{ 0.0f,         2.0f / (T - B),     0.0f,       0.0f, },
-			{ 0.0f,         0.0f,           0.5f,       0.0f },
-			{ (R + L) / (L - R),  (T + B) / (B - T),    0.5f,       1.0f },
-		};
-	}
-
-	for (int n = 0; n < _draw_data->CmdListsCount; n++)
-	{
-		const ImDrawList* cmd_list = _draw_data->CmdLists[n];
-
-
-	}
-}
-
 
 
 void GameEngineImpl::Update(float deltaT) 
@@ -279,11 +254,6 @@ void GameEngineImpl::RenderScene(void)
 
 	MotionBlur::RenderCameraBlur(gfxContext, m_Camera);
 	
-	//---
-
-
-
-	//---
 
 	gfxContext.Finish();
 }
@@ -322,24 +292,33 @@ void GameEngineImpl::RenderUI(class GraphicsContext& gfxContext)
 													//gfxContext.SetViewportAndScissor(m_MainViewport, m_MainScissor);
 
 
-		__declspec(align(64))  struct VSConstants
-		{
-			Matrix4 modelToProjection;
-			Matrix4 modelToShadow;
-			XMFLOAT3 viewerPos;
-		} vsConstants;
-		vsConstants.modelToProjection = Matrix4(kIdentity);
-		vsConstants.modelToShadow = m_SunShadow.GetShadowMatrix();
-		XMStoreFloat3(&vsConstants.viewerPos, m_Camera.GetPosition());
+
+			float translate = -0.5f * 2.f;
+			const float L = 0.f;
+			const float R = ImGui::GetIO().DisplaySize.x;
+			const float B = ImGui::GetIO().DisplaySize.y;
+			const float T = 0.f;
+			__declspec(align(64))   const float mvp[4][4] =
+			{
+				{ 2.0f / (R - L),   0.0f,           0.0f,       0.0f },
+				{ 0.0f,         2.0f / (T - B),     0.0f,       0.0f, },
+				{ 0.0f,         0.0f,           0.5f,       0.0f },
+				{ (R + L) / (L - R),  (T + B) / (B - T),    0.5f,       1.0f },
+			};
+
 
 		gfxContext.SetDynamicDescriptors(4, 0, 1, &m_imguiFontTexture.GetSRV());
-		gfxContext.SetDynamicConstantBufferView(0, sizeof(vsConstants), &vsConstants);
+		
+		gfxContext.SetDynamicConstantBufferView(0, sizeof(mvp), &mvp);
+
+
+
 		gfxContext.SetDynamicConstantBufferView(1, sizeof(psConstants), &psConstants);
 
 
 		gfxContext.SetConstants(5, 0);
 
-		gfxContext.DrawIndexed(3, 0);
+		//gfxContext.DrawIndexed(3, 0);
 
 		bool show_test_window = true;
 
@@ -352,14 +331,64 @@ void GameEngineImpl::RenderUI(class GraphicsContext& gfxContext)
 
 		ImGui::Render();
 
+		auto drawData = ImGui::GetDrawData();
 
-		/*
-		Context.SetDynamicDescriptor(0, 0, g_OverlayBuffer.GetSRV());
 
-		Context.SetPipelineState(s_BlendUIPSO);
-		Context.Draw(3);
-		*/
 
+		if (drawData->CmdListsCount > 0)
+		{
+			//DynAlloc TempSpace = m_CpuLinearAllocator.Allocate(NumBytes, 512);
+			//SIMDMemCopy(TempSpace.DataPtr, BufferData, Math::DivideByMultiple(NumBytes, 16));
+			//CopyBufferRegion(Dest, DestOffset, TempSpace.Buffer, TempSpace.Offset, NumBytes);
+
+
+			for (int n = 0; n < drawData->CmdListsCount; n++)
+			{
+
+			}
+
+			for (int n = 0; n < drawData->CmdListsCount; n++)
+			{
+				const ImDrawList* cmd_list = drawData->CmdLists[n];
+
+				size_t verticesCount = cmd_list->VtxBuffer.size();
+				size_t indicesCount = cmd_list->IdxBuffer.size();
+				size_t verticesSize = verticesCount * sizeof(ImDrawVert);
+				size_t indicesSize = indicesCount * sizeof(ImDrawIdx);
+
+				
+				//imguiVertexBuffer.Create(L"Imgui vertex buffer", verticesCount, sizeof(ImDrawVert), &cmd_list->VtxBuffer[0]);
+				//imguiIndexBuffer.Create(L"Imgui index", indicesCount, sizeof(ImDrawIdx), &cmd_list->IdxBuffer[0]);
+
+				//gfxContext.InitializeBuffer(imguiVertexBuffer, &cmd_list->VtxBuffer[0], verticesSize);
+				//gfxContext.InitializeBuffer(imguiIndexBuffer, &cmd_list->IdxBuffer[0], indicesSize);
+
+				//gfxContext::InitializeBuffer(*this, initialData, m_BufferSize);
+				gfxContext.WriteBuffer(imguiVertexBuffer, 0, &cmd_list->VtxBuffer[0], verticesSize);
+				gfxContext.WriteBuffer(imguiIndexBuffer, 0, &cmd_list->IdxBuffer[0], indicesSize);
+
+				gfxContext.SetVertexBuffer(0, imguiVertexBuffer.VertexBufferView());
+				gfxContext.SetIndexBuffer(imguiIndexBuffer.IndexBufferView());
+
+
+				for (int cmd_i = 0; cmd_i < cmd_list->CmdBuffer.size(); cmd_i++)
+				{
+					const ImDrawCmd* pcmd = &cmd_list->CmdBuffer[cmd_i];
+					if (pcmd->UserCallback)
+					{
+						pcmd->UserCallback(cmd_list, pcmd);
+					}
+					else
+					{
+						const D3D12_RECT r = { (LONG)pcmd->ClipRect.x, (LONG)pcmd->ClipRect.y, (LONG)pcmd->ClipRect.z, (LONG)pcmd->ClipRect.w };
+						gfxContext.SetScissor(r);
+
+						gfxContext.DrawIndexedInstanced(pcmd->ElemCount, 1, 0, 0, 0);
+
+					}
+				}
+			}
+		}
 	}
 
 };
@@ -464,21 +493,28 @@ void GameEngineImpl::Startup(void)
 
 	memset(buf, 0, sizeof(VSInput) * 3);
 
-	buf[0].pos.x = 1;
-	buf[0].pos.y = 1;
+	buf[0].pos.x = g_OverlayBuffer.GetWidth()/2.0f;
+	buf[0].pos.y = g_OverlayBuffer.GetHeight() / 2.0f;
 
 	buf[0].uv.x = 2;
 	buf[0].uv.y = 3;
 
-	buf[0].color = 0x01800304;
+	buf[0].color = 0x018003FF;
 
-	buf[1].pos.x = 1;
-	buf[1].pos.y = 100;
+	buf[1].pos.x = g_OverlayBuffer.GetWidth() / 2.0f;
+	buf[1].pos.y = 0;
+	buf[1].color = 0x011003FF;
 
-	buf[2].pos.x = 100;
-	buf[2].pos.y = 1;
+	buf[2].pos.x = 0;
+	buf[2].pos.y = g_OverlayBuffer.GetHeight() / 2.0f;
+	buf[2].color = 0xFF1003FF;
 
-	imguiVertexBuffer.Create(L"imguiVertexBuffer", 3, sizeof(VSInput), buf);
+
+	imguiVertexBuffer.Create(L"imguiVertexBuffer", 30000, sizeof(VSInput), nullptr);
+
+
+
+
 	_aligned_free(buf);
 
 	__declspec(align(16)) uint16 idxs[3];
@@ -486,12 +522,12 @@ void GameEngineImpl::Startup(void)
 	idxs[1] = 1;
 	idxs[2] = 2;
 
-	imguiIndexBuffer.Create(L"imguiIndexBuffer", 3, sizeof(uint16_t), &idxs);
+	imguiIndexBuffer.Create(L"imguiIndexBuffer", 30000, sizeof(uint16_t), nullptr);
 
 
 	ImGuiIO& io = ImGui::GetIO();
 
-	io.RenderDrawListsFn = ImGui_ImplDX12_RenderDrawLists;
+	//io.RenderDrawListsFn = ImGui_ImplDX12_RenderDrawLists;
 
 	unsigned char* pixels = 0;
 	int width, height;

@@ -29,4 +29,5 @@ struct VSOutput
 {
 	float4 pos : SV_Position;
 	float2 uv : TexCoord0;
+	float4 color: COLOR;
 };
