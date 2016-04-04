@@ -30,7 +30,6 @@ VSOutput main(VSInput vsInput)
 	VSOutput vsOutput;
 
 	vsOutput.pos = mul(modelToProjection, float4(vsInput.pos.xy,0, 1));
-	vsOutput.pos.z = 0.3;
 	vsOutput.uv = vsInput.uv;
 	vsOutput.color = vsInput.color;
 

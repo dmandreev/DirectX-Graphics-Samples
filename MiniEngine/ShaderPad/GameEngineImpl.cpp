@@ -39,6 +39,8 @@ void GameEngineImpl::Update(float deltaT)
 
 	io.MouseDown[0] = pointerPressed;
 
+
+
 	ImGui::NewFrame();
 
 	
@@ -399,7 +401,6 @@ void GameEngineImpl::RenderUI(class GraphicsContext& gfxContext)
 							(LONG)pcmd->ClipRect.w };
 						gfxContext.SetScissor(r);
 
-
 						gfxContext.DrawIndexedInstanced(pcmd->ElemCount,1,idx_offset,vtx_offset,0);
 					}
 					idx_offset += pcmd->ElemCount;
@@ -498,23 +499,13 @@ void GameEngineImpl::Startup(void)
 	rasterizerDesc.ForcedSampleCount = 1;
 	rasterizerDesc.ConservativeRaster = D3D12_CONSERVATIVE_RASTERIZATION_MODE_OFF;
 
-	m_ImguiPSO.SetRasterizerState(rasterizerDesc);
+	m_ImguiPSO.SetRasterizerState(RasterizerTwoSided);
 
 
-	D3D12_BLEND_DESC blendDesc;
-	blendDesc.AlphaToCoverageEnable = false;
-	blendDesc.IndependentBlendEnable = false;
-	blendDesc.RenderTarget[0].BlendEnable = true;
-	blendDesc.RenderTarget[0].LogicOpEnable = false;
-	blendDesc.RenderTarget[0].SrcBlend = D3D12_BLEND_SRC_ALPHA;
-	blendDesc.RenderTarget[0].DestBlend = D3D12_BLEND_INV_SRC_ALPHA;
-	blendDesc.RenderTarget[0].BlendOp = D3D12_BLEND_OP_ADD;
-	blendDesc.RenderTarget[0].SrcBlendAlpha = D3D12_BLEND_INV_SRC_ALPHA;
-	blendDesc.RenderTarget[0].DestBlendAlpha = D3D12_BLEND_ZERO;
-	blendDesc.RenderTarget[0].BlendOpAlpha = D3D12_BLEND_OP_ADD;
-	blendDesc.RenderTarget[0].RenderTargetWriteMask = D3D12_COLOR_WRITE_ENABLE_ALL;
 
-	m_ImguiPSO.SetBlendState(blendDesc);
+	m_ImguiPSO.SetBlendState(BlendTraditional);
+
+
 	m_ImguiPSO.SetDepthStencilState(DepthStateDisabled);
 	m_ImguiPSO.SetSampleMask(0xFFFFFFFF);
 
