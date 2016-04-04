@@ -281,7 +281,7 @@ void GameEngineImpl::RenderUI(class GraphicsContext& gfxContext)
 
 		ScopedTimer _prof(L"Imgui", gfxContext);
 		gfxContext.SetPipelineState(m_ImguiPSO);
-		gfxContext.SetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);
+		gfxContext.SetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
 
 		//gfxContext.SetVertexBuffer(0, imguiVertexBuffer.VertexBufferView());
@@ -358,13 +358,6 @@ void GameEngineImpl::RenderUI(class GraphicsContext& gfxContext)
 				size_t indicesSize = indicesCount * sizeof(ImDrawIdx);
 
 				
-				//imguiVertexBuffer.Create(L"Imgui vertex buffer", verticesCount, sizeof(ImDrawVert), &cmd_list->VtxBuffer[0]);
-				//imguiIndexBuffer.Create(L"Imgui index", indicesCount, sizeof(ImDrawIdx), &cmd_list->IdxBuffer[0]);
-
-				//gfxContext.InitializeBuffer(imguiVertexBuffer, &cmd_list->VtxBuffer[0], verticesSize);
-				//gfxContext.InitializeBuffer(imguiIndexBuffer, &cmd_list->IdxBuffer[0], indicesSize);
-
-				//gfxContext::InitializeBuffer(*this, initialData, m_BufferSize);
 				gfxContext.WriteBuffer(imguiVertexBuffer, 0, &cmd_list->VtxBuffer[0], verticesSize);
 				gfxContext.WriteBuffer(imguiIndexBuffer, 0, &cmd_list->IdxBuffer[0], indicesSize);
 
