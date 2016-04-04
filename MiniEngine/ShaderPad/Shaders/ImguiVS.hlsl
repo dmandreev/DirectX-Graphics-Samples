@@ -20,11 +20,9 @@ cbuffer VSConstants : register(b0)
 
 struct VSInput
 {
-	float3 position : POSITION;
-	float2 texcoord0 : TEXCOORD;
-	float3 normal : NORMAL;
-	float3 tangent : TANGENT;
-	float3 bitangent : BITANGENT;
+	float2 pos: POSITION;
+	float2 uv: TEXCOORD;
+	float4 color: COLOR;
 };
 
 
@@ -33,9 +31,9 @@ VSOutput main(VSInput vsInput)
 {
 	VSOutput vsOutput;
 
-	vsOutput.pos = mul(modelToProjection, float4(vsInput.position, 596));
+	vsOutput.pos = mul(modelToProjection, float4(vsInput.pos.xy,1, 475));
 	//vsOutput.position = float4(vsInput.position, 1.0);
-	vsOutput.uv = vsInput.texcoord0;
+	vsOutput.uv = vsInput.uv;
 
 	return vsOutput;
 }

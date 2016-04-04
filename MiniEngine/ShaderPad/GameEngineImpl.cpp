@@ -419,11 +419,9 @@ void GameEngineImpl::Startup(void)
 
 	D3D12_INPUT_ELEMENT_DESC vertElem[] =
 	{
-		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+		{ "POSITION", 0, DXGI_FORMAT_R32G32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
 		{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
-		{ "NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
-		{ "TANGENT", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
-		{ "BITANGENT", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 }
+		{ "COLOR", 0, DXGI_FORMAT_R8G8B8A8_UNORM, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
 	};
 
 	m_ImguiPSO.SetRootSignature(m_ImguiSig);
@@ -457,28 +455,28 @@ void GameEngineImpl::Startup(void)
 
 	struct VSInput
 	{
-		float3 position;               // Offset:    0
-		float2 texcoord0;              // Offset:   12
-		float3 normal;                 // Offset:   20
-		float3 tangent;                // Offset:   32
-		float3 bitangent;              // Offset:   44
+		float2 pos;               
+		float2 uv;              
+		unsigned int color;
 	};
 
 	VSInput *buf = (VSInput *)_aligned_malloc(sizeof(VSInput) * 3, 16);
 
 	memset(buf, 0, sizeof(VSInput) * 3);
 
-	buf[0].position.x = 1;
-	buf[0].position.y = 1;
-	buf[0].position.z = 0.98;
+	buf[0].pos.x = 1;
+	buf[0].pos.y = 1;
 
-	buf[1].position.x = 1;
-	buf[1].position.y = 100;
-	buf[1].position.z = 0.98;
+	buf[0].uv.x = 2;
+	buf[0].uv.y = 3;
 
-	buf[2].position.x = 100;
-	buf[2].position.y = 1;
-	buf[2].position.z = 0.98;
+	buf[0].color = 0x01800304;
+
+	buf[1].pos.x = 1;
+	buf[1].pos.y = 100;
+
+	buf[2].pos.x = 100;
+	buf[2].pos.y = 1;
 
 	imguiVertexBuffer.Create(L"imguiVertexBuffer", 3, sizeof(VSInput), buf);
 	_aligned_free(buf);
