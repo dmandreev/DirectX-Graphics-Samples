@@ -24,7 +24,8 @@ void GameEngineImpl::Update(float deltaT)
 
 
 	ImGuiIO& io = ImGui::GetIO();
-	io.DisplaySize = ImVec2(g_OverlayBuffer.GetWidth(), g_OverlayBuffer.GetHeight());
+	io.DisplaySize = ImVec2(
+		g_SceneColorBuffer.GetWidth(), g_SceneColorBuffer.GetHeight());
 	io.DeltaTime = deltaT;
 	ImGui::NewFrame();
 
@@ -283,8 +284,8 @@ void GameEngineImpl::RenderUI(class GraphicsContext& gfxContext)
 		gfxContext.SetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);
 
 
-		gfxContext.SetVertexBuffer(0, imguiVertexBuffer.VertexBufferView());
-		gfxContext.SetIndexBuffer(imguiIndexBuffer.IndexBufferView());
+		//gfxContext.SetVertexBuffer(0, imguiVertexBuffer.VertexBufferView());
+		//gfxContext.SetIndexBuffer(imguiIndexBuffer.IndexBufferView());
 		//gfxContext.SetDepthStencilTarget(g_SceneDepthBuffer);
 		gfxContext.SetRenderTarget(g_OverlayBuffer);// , g_SceneDepthBuffer, true);
 
@@ -307,7 +308,7 @@ void GameEngineImpl::RenderUI(class GraphicsContext& gfxContext)
 			};
 
 
-		gfxContext.SetDynamicDescriptors(4, 0, 1, &m_imguiFontTexture.GetSRV());
+		gfxContext.SetDynamicDescriptors(3, 0, 1, &m_imguiFontTexture.GetSRV());
 		
 		gfxContext.SetDynamicConstantBufferView(0, sizeof(mvp), &mvp);
 
@@ -392,6 +393,16 @@ void GameEngineImpl::RenderUI(class GraphicsContext& gfxContext)
 	}
 
 };
+
+
+inline void* MemAllocFn(size_t sz)
+{
+	return _aligned_malloc(sz,16);
+}
+inline void MemFreeFn(void* ptr)
+{
+	_aligned_free(ptr);
+}
 
 
 void GameEngineImpl::Startup(void) 
@@ -528,6 +539,9 @@ void GameEngineImpl::Startup(void)
 	ImGuiIO& io = ImGui::GetIO();
 
 	//io.RenderDrawListsFn = ImGui_ImplDX12_RenderDrawLists;
+
+	io.MemAllocFn = MemAllocFn;
+	io.MemFreeFn = MemFreeFn;
 
 	unsigned char* pixels = 0;
 	int width, height;

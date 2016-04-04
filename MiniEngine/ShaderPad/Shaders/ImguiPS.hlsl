@@ -27,6 +27,6 @@ SamplerState sampler0 : register(s0);
 float4 main(VSOutput vsOutput) : SV_Target0
 {
 	float4 tex = texDiffuse.Sample(sampler0, vsOutput.uv);
-	return vsOutput.color; //* tex;
+	return vsOutput.color* tex;
 }
 
