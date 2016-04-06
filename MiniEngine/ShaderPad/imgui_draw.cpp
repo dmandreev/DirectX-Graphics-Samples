@@ -1681,7 +1681,7 @@ void ImFont::BuildLookupTable()
         ImFont::Glyph& tab_glyph = Glyphs.back();
         tab_glyph = *FindGlyph((unsigned short)' ');
         tab_glyph.Codepoint = '\t';
-        tab_glyph.XAdvance *= 4;
+        tab_glyph.XAdvance *= 2;
         IndexXAdvance[(int)tab_glyph.Codepoint] = (float)tab_glyph.XAdvance;
         IndexLookup[(int)tab_glyph.Codepoint] = (int)(Glyphs.Size-1);
     }

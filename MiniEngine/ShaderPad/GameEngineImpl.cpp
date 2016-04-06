@@ -40,17 +40,32 @@ void GameEngineImpl::Update(float deltaT)
 
 	ImGuiIO& io = ImGui::GetIO();
 
+
 	io.DisplaySize = ImVec2(g_OverlayBuffer.GetWidth(), g_OverlayBuffer.GetHeight());
 	io.DeltaTime = deltaT;
 	io.MousePos = ImVec2(mousePosX, mousePosY);
 
+
+
+
 	io.MouseDown[0] = pointerPressed;
+	io.MouseWheel;
 
 	//Windows::ApplicationModel::DataTransfer::Clipboard::
+
+	/*
+	for (int i = 0; i < 255; i++)
+	{
+		auto keyState = window->GetKeyState(Windows::System::VirtualKey(i));
+		io.KeysDown[i] = Windows::UI::Core::CoreVirtualKeyStates::Down == keyState;
+
+	};
+	*/
 
 	io.KeyCtrl = io.KeysDown[VK_CONTROL];
 	io.KeyShift = io.KeysDown[VK_SHIFT];
 
+	
 
 
 	//	window->GetKeyState(Windows::System::VirtualKey(Windows::System::VirtualKey::Control))
@@ -555,6 +570,9 @@ void GameEngineImpl::RenderUI(class GraphicsContext& gfxContext)
 		}
 	}
 
+	//mouse wheel clean?
+	//kbd clean??
+
 	gfxContext.SetViewportAndScissor(0, 0, g_OverlayBuffer.GetWidth(), g_OverlayBuffer.GetHeight());
 
 };
@@ -624,11 +642,11 @@ static void SetClipboardTextFn_DefaultImpl(const char* text)
 
 
 
-inline void* MemAllocFn(size_t sz)
+void* MemAllocFn(size_t sz)
 {
 	return _aligned_malloc(sz,16);
 }
-inline void MemFreeFn(void* ptr)
+void MemFreeFn(void* ptr)
 {
 	_aligned_free(ptr);
 }
@@ -765,6 +783,7 @@ void GameEngineImpl::Startup(void)
 
 
 
+	auto addr = (DWORD)&io.MemAllocFn;
 
 	io.MemAllocFn = MemAllocFn;
 	io.MemFreeFn = MemFreeFn;

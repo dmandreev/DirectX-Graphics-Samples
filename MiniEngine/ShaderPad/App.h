@@ -73,6 +73,19 @@ namespace ShaderPad
 			_In_ Windows::UI::Core::PointerEventArgs^ args
 			);
 
+		void App::OnPointerWheelChanged(Windows::UI::Core::CoreWindow ^, Windows::UI::Core::PointerEventArgs ^ args)
+		{
+			auto pts = args->GetIntermediatePoints();
+
+			if (pts->Size > 0)
+			{
+				auto pt = pts->GetAt(0);
+
+				auto delta = pt->Properties->MouseWheelDelta;
+
+				int z = 5;
+			}
+		}
 
 	private:
 
@@ -85,13 +98,6 @@ namespace ShaderPad
 
 		char kb_map[256];
 
-		struct kbst
-		{
-			bool pressed = false;
-			int keyb_code = -1;
-		};
-
-		kbst kb_status[256];
 
 		bool m_tracking = true;
 

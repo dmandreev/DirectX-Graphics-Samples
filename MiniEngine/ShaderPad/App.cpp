@@ -88,6 +88,8 @@ void App::SetWindow(CoreWindow^ window)
 	MouseDevice::GetForCurrentView()->MouseMoved +=
 		ref new TypedEventHandler<MouseDevice^, MouseEventArgs^>(this, &App::OnMouseMoved);
 
+
+
 	DisplayInformation^ currentDisplayInformation = DisplayInformation::GetForCurrentView();
 
 	currentDisplayInformation->DpiChanged +=
@@ -99,6 +101,8 @@ void App::SetWindow(CoreWindow^ window)
 	DisplayInformation::DisplayContentsInvalidated +=
 		ref new TypedEventHandler<DisplayInformation^, Object^>(this, &App::OnDisplayContentsInvalidated);
 
+
+
 	window->PointerPressed +=
 		ref new TypedEventHandler<CoreWindow^, PointerEventArgs^>(this, &App::OnPointerPressed);
 
@@ -109,6 +113,8 @@ void App::SetWindow(CoreWindow^ window)
 		ref new TypedEventHandler<CoreWindow^, PointerEventArgs^>(this, &App::OnPointerMoved);
 
 	window->CharacterReceived += ref new TypedEventHandler < CoreWindow^, CharacterReceivedEventArgs^>(this, &App::OnCharacterReceived);
+
+	window->PointerWheelChanged += ref new Windows::Foundation::TypedEventHandler<Windows::UI::Core::CoreWindow ^, Windows::UI::Core::PointerEventArgs ^>(this, &ShaderPad::App::OnPointerWheelChanged);
 
 }
 
@@ -133,6 +139,8 @@ void App::OnMouseMoved(
 		s_MouseState.lX = args->MouseDelta.X * 4;
 		s_MouseState.lY = args->MouseDelta.Y * 4;
 	}
+
+
 }
 
 
@@ -149,13 +157,14 @@ void App::OnKeyDown(
 
 	ImGuiIO& io = ImGui::GetIO();
 
-	io.KeysDown[static_cast<char>(args->VirtualKey)] = 1;
 
-	kb_status[static_cast<char>(args->VirtualKey)].pressed = true;
+	if ((size_t)args->VirtualKey<256)
+		io.KeysDown[(size_t)args->VirtualKey] = true;
 
 
 
-	s_Keybuffer[kb_map[static_cast<char>(args->VirtualKey)]] = 128;
+
+	s_Keybuffer[kb_map[(size_t)args->VirtualKey]] = 128;
 
 	if (args->VirtualKey == Windows::System::VirtualKey::Escape)
 	{
@@ -197,7 +206,6 @@ void App::OnCharacterReceived(
 
 	io.AddInputCharacter(args->KeyCode);
 
-	kb_status[static_cast<char>(args->KeyStatus.ScanCode)].keyb_code = args->KeyCode;
 
 	auto code=args->KeyCode;
 
@@ -276,13 +284,13 @@ void App::OnKeyUp(
 	_In_ KeyEventArgs^ args
 	)
 {
-	kb_status[static_cast<char>(args->VirtualKey)].pressed = false;
-	kb_status[static_cast<char>(args->VirtualKey)].keyb_code = -1;
 
-	s_Keybuffer[kb_map[(int)args->VirtualKey]] = 0;
+	s_Keybuffer[kb_map[(size_t)args->VirtualKey]] = 0;
 
 	ImGuiIO& io = ImGui::GetIO();
-	io.KeysDown[static_cast<char>(args->VirtualKey)] = 0;
+
+	if ((size_t)args->VirtualKey<256)
+		io.KeysDown[(size_t)(args->VirtualKey)] = 0;
 
 }
 
