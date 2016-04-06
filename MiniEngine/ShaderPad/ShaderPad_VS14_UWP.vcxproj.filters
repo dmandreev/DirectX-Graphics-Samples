@@ -294,4 +294,10 @@
   <ItemGroup>
     <AppxManifest Include="Package.appxmanifest" />
   </ItemGroup>
+  <ItemGroup>
+    <Font Include="Assets\consola.ttf" />
+    <Font Include="Assets\consolab.ttf" />
+    <Font Include="Assets\consolai.ttf" />
+    <Font Include="Assets\consolaz.ttf" />
+  </ItemGroup>
 </Project>

@@ -547,6 +547,10 @@
 #include <math.h>       // sqrtf, fabsf, fmodf, powf, cosf, sinf, floorf, ceilf
 #include <stdlib.h>     // NULL, malloc, free, qsort, atoi
 #include <stdio.h>      // vsnprintf, sscanf, printf
+#include <string>
+#include <vector>
+#include <strstream>
+
 #if defined(_MSC_VER) && _MSC_VER <= 1500 // MSVC 2008 or earlier
 #include <stddef.h>     // intptr_t
 #else
@@ -7030,41 +7034,82 @@ static ImVec2 InputTextCalcTextSizeW(const ImWchar* text_begin, const ImWchar* t
 namespace ImGuiStb
 {
 
-static int     STB_TEXTEDIT_STRINGLEN(const STB_TEXTEDIT_STRING* obj)                             { return obj->CurLenW; }
-static ImWchar STB_TEXTEDIT_GETCHAR(const STB_TEXTEDIT_STRING* obj, int idx)                      { return obj->Text[idx]; }
-static float   STB_TEXTEDIT_GETWIDTH(STB_TEXTEDIT_STRING* obj, int line_start_idx, int char_idx)  { ImWchar c = obj->Text[line_start_idx+char_idx]; if (c == '\n') return STB_TEXTEDIT_GETWIDTH_NEWLINE; return GImGui->Font->GetCharAdvance(c) * (GImGui->FontSize / GImGui->Font->FontSize); }
-static int     STB_TEXTEDIT_KEYTOTEXT(int key)                                                    { return key >= 0x10000 ? 0 : key; }
-static ImWchar STB_TEXTEDIT_NEWLINE = '\n';
-static void    STB_TEXTEDIT_LAYOUTROW(StbTexteditRow* r, STB_TEXTEDIT_STRING* obj, int line_start_idx)
-{
-    const ImWchar* text = obj->Text.Data;
-    const ImWchar* text_remaining = NULL;
-    const ImVec2 size = InputTextCalcTextSizeW(text + line_start_idx, text + obj->CurLenW, &text_remaining, NULL, true);
-    r->x0 = 0.0f;
-    r->x1 = size.x;
-    r->baseline_y_delta = size.y;
-    r->ymin = 0.0f;
-    r->ymax = size.y;
-    r->num_chars = (int)(text_remaining - (text + line_start_idx));
-}
+	static int     STB_TEXTEDIT_STRINGLEN(const STB_TEXTEDIT_STRING* obj) { return obj->CurLenW; }
+	static ImWchar STB_TEXTEDIT_GETCHAR(const STB_TEXTEDIT_STRING* obj, int idx) { return obj->Text[idx]; }
+	static float   STB_TEXTEDIT_GETWIDTH(STB_TEXTEDIT_STRING* obj, int line_start_idx, int char_idx) { ImWchar c = obj->Text[line_start_idx + char_idx]; if (c == '\n') return STB_TEXTEDIT_GETWIDTH_NEWLINE; return GImGui->Font->GetCharAdvance(c) * (GImGui->FontSize / GImGui->Font->FontSize); }
+	static int     STB_TEXTEDIT_KEYTOTEXT(int key) { return key >= 0x10000 ? 0 : key; }
+	static ImWchar STB_TEXTEDIT_NEWLINE = '\n';
+	static void    STB_TEXTEDIT_LAYOUTROW(StbTexteditRow* r, STB_TEXTEDIT_STRING* obj, int line_start_idx)
+	{
+		const ImWchar* text = obj->Text.Data;
+		const ImWchar* text_remaining = NULL;
+		const ImVec2 size = InputTextCalcTextSizeW(text + line_start_idx, text + obj->CurLenW, &text_remaining, NULL, true);
+		r->x0 = 0.0f;
+		r->x1 = size.x;
+		r->baseline_y_delta = size.y;
+		r->ymin = 0.0f;
+		r->ymax = size.y;
+		r->num_chars = (int)(text_remaining - (text + line_start_idx));
+	}
 
-static bool is_separator(unsigned int c)                                                          { return c==',' || c==';' || c=='(' || c==')' || c=='{' || c=='}' || c=='[' || c==']' || c=='|'; }
+	static bool is_separator(unsigned int c) { return c == ',' || c == ';' || c == '(' || c == ')' || c == '{' || c == '}' || c == '[' || c == ']' || c == '|'; }
 #define STB_TEXTEDIT_IS_SPACE(CH)                                                                 ( ImCharIsSpace((unsigned int)CH) || is_separator((unsigned int)CH) )
-static void STB_TEXTEDIT_DELETECHARS(STB_TEXTEDIT_STRING* obj, int pos, int n)
-{
-    ImWchar* dst = obj->Text.Data + pos;
+	static void STB_TEXTEDIT_DELETECHARS(STB_TEXTEDIT_STRING* obj, int pos, int n)
+	{
+		ImWchar* dst = obj->Text.Data + pos;
 
-    // We maintain our buffer length in both UTF-8 and wchar formats
-    obj->CurLenA -= ImTextCountUtf8BytesFromStr(dst, dst + n);
-    obj->CurLenW -= n;
+		// We maintain our buffer length in both UTF-8 and wchar formats
+		obj->CurLenA -= ImTextCountUtf8BytesFromStr(dst, dst + n);
+		obj->CurLenW -= n;
 
-    // Offset remaining text
-    const ImWchar* src = obj->Text.Data + pos + n;
-    while (ImWchar c = *src++)
-        *dst++ = c;
-    *dst = '\0';
-}
+		// Offset remaining text
+		const ImWchar* src = obj->Text.Data + pos + n;
+		while (ImWchar c = *src++)
+			*dst++ = c;
+		*dst = '\0';
+	}
 
+//#include <string>
+
+
+	static std::wstring scan_ident(STB_TEXTEDIT_STRING* obj, int pos, const ImWchar* new_text, int new_text_len)
+	{
+		
+		std::wstring text((wchar_t *)obj->Text.Data);
+
+		auto part=text.substr(0, pos);
+
+
+		std::vector<std::wstring> lines;
+
+		std::wstring::size_type p = 0;
+		std::wstring::size_type prev = 0;
+
+		while ((p = part.find(L'\n', prev)) != std::string::npos)
+		{
+			lines.push_back(part.substr(prev, p - prev));
+			prev = p + 1;
+		}
+
+		lines.push_back(part.substr(prev));
+
+		std::wstring ident = L"";
+
+		if (lines.size() > 0)
+		{
+			for (size_t i = 0; i < lines[lines.size() - 1].length(); i++)
+			{
+				if (lines[lines.size() - 1][i] == L' ' || lines[lines.size() - 1][i] == L'\t')
+				{
+					ident = ident + lines[lines.size() - 1][i];
+				}
+				else
+					break;
+			}
+		}
+
+		return ident;
+	}
 static bool STB_TEXTEDIT_INSERTCHARS(STB_TEXTEDIT_STRING* obj, int pos, const ImWchar* new_text, int new_text_len)
 {
     const int text_len = obj->CurLenW;
@@ -7774,12 +7819,15 @@ bool ImGui::InputTextMultiline(const char* label, char* buf, size_t buf_size, co
     return ret;
 }
 
+
 // NB: scalar_format here must be a simple "%xx" format string with no prefix/suffix (unlike the Drag/Slider functions "display_format" argument)
 bool ImGui::InputScalarEx(const char* label, ImGuiDataType data_type, void* data_ptr, void* step_ptr, void* step_fast_ptr, const char* scalar_format, ImGuiInputTextFlags extra_flags)
 {
     ImGuiWindow* window = GetCurrentWindow();
     if (window->SkipItems)
         return false;
+
+
 
     ImGuiState& g = *GImGui;
     const ImGuiStyle& style = g.Style;

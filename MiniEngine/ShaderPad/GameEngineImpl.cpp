@@ -1,6 +1,12 @@
 #include "pch.h"
 #include "GameEngineImpl.h"
+
+
+#include "imconfig.h"
 #include "imgui.h"
+#include "imgui_internal.h"
+
+
 
 namespace Graphics
 {
@@ -33,11 +39,41 @@ void GameEngineImpl::Update(float deltaT)
 
 
 	ImGuiIO& io = ImGui::GetIO();
+
 	io.DisplaySize = ImVec2(g_OverlayBuffer.GetWidth(), g_OverlayBuffer.GetHeight());
 	io.DeltaTime = deltaT;
 	io.MousePos = ImVec2(mousePosX, mousePosY);
 
 	io.MouseDown[0] = pointerPressed;
+
+	//Windows::ApplicationModel::DataTransfer::Clipboard::
+
+	io.KeyCtrl = io.KeysDown[VK_CONTROL];
+	io.KeyShift = io.KeysDown[VK_SHIFT];
+
+
+
+	//	window->GetKeyState(Windows::System::VirtualKey(Windows::System::VirtualKey::Control))
+
+		//;
+	
+	//io.KeyShift = Windows::UI::Core::CoreVirtualKeyStates::Down == 
+		//window->GetKeyState(Windows::System::VirtualKey(Windows::System::VirtualKey::Shift))
+		//;
+
+
+
+
+	//keyst = window->GetKeyState(Windows::System::VirtualKey(Windows::System::VirtualKey::LeftShift));
+	//keyst = window->GetKeyState(Windows::System::VirtualKey(Windows::System::VirtualKey::RightShift));
+
+
+
+	
+
+
+
+	//io.KeysDown()
 
 
 
@@ -274,8 +310,118 @@ void GameEngineImpl::RenderScene(void)
 }
 
 
+
+
+void ShowMetricsWindow(bool* opened)
+{
+
+	if (ImGui::Begin("ImGui Metrics", opened))
+	{
+		ImGui::Text("ImGui %s", ImGui::GetVersion());
+		ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+		ImGui::Text("%d vertices, %d indices (%d triangles)", ImGui::GetIO().MetricsRenderVertices, ImGui::GetIO().MetricsRenderIndices, ImGui::GetIO().MetricsRenderIndices / 3);
+		ImGui::Text("%d allocations", ImGui::GetIO().MetricsAllocs);
+		static bool show_clip_rects = true;
+		ImGui::Checkbox("Show clipping rectangles when hovering a ImDrawCmd", &show_clip_rects);
+		ImGui::Separator();
+
+		struct Funcs
+		{
+			static void NodeDrawList(ImDrawList* draw_list, const char* label)
+			{
+				bool node_opened = ImGui::TreeNode(draw_list, "%s: '%s' %d vtx, %d indices, %d cmds", label, draw_list->_OwnerName ? draw_list->_OwnerName : "", draw_list->VtxBuffer.Size, draw_list->IdxBuffer.Size, draw_list->CmdBuffer.Size);
+				if (draw_list == ImGui::GetWindowDrawList())
+				{
+					ImGui::SameLine();
+					ImGui::TextColored(ImColor(255, 100, 100), "CURRENTLY APPENDING"); // Can't display stats for active draw list! (we don't have the data double-buffered)
+				}
+				if (!node_opened)
+					return;
+
+				int elem_offset = 0;
+				for (const ImDrawCmd* pcmd = draw_list->CmdBuffer.begin(); pcmd < draw_list->CmdBuffer.end(); elem_offset += pcmd->ElemCount, pcmd++)
+				{
+					if (pcmd->UserCallback)
+					{
+						ImGui::BulletText("Callback %p, user_data %p", pcmd->UserCallback, pcmd->UserCallbackData);
+						continue;
+					}
+					ImGui::BulletText("Draw %-4d %s vtx, tex = %p, clip_rect = (%.0f,%.0f)..(%.0f,%.0f)", pcmd->ElemCount, draw_list->IdxBuffer.Size > 0 ? "indexed" : "non-indexed", pcmd->TextureId, pcmd->ClipRect.x, pcmd->ClipRect.y, pcmd->ClipRect.z, pcmd->ClipRect.w);
+					if (show_clip_rects && ImGui::IsItemHovered())
+					{
+						ImRect clip_rect = pcmd->ClipRect;
+						ImRect vtxs_rect;
+						ImDrawIdx* idx_buffer = (draw_list->IdxBuffer.Size > 0) ? draw_list->IdxBuffer.Data : NULL;
+						for (int i = elem_offset; i < elem_offset + (int)pcmd->ElemCount; i++)
+							vtxs_rect.Add(draw_list->VtxBuffer[idx_buffer ? idx_buffer[i] : i].pos);
+						GImGui->OverlayDrawList.PushClipRectFullScreen();
+						clip_rect.Round(); GImGui->OverlayDrawList.AddRect(clip_rect.Min, clip_rect.Max, ImColor(255, 255, 0));
+						vtxs_rect.Round(); GImGui->OverlayDrawList.AddRect(vtxs_rect.Min, vtxs_rect.Max, ImColor(255, 0, 255));
+						GImGui->OverlayDrawList.PopClipRect();
+					}
+				}
+				ImGui::TreePop();
+			}
+
+			static void NodeWindows(ImVector<ImGuiWindow*>& windows, const char* label)
+			{
+				if (!ImGui::TreeNode(label, "%s (%d)", label, windows.Size))
+					return;
+				for (int i = 0; i < windows.Size; i++)
+					Funcs::NodeWindow(windows[i], "Window");
+				ImGui::TreePop();
+			}
+
+			static void NodeWindow(ImGuiWindow* window, const char* label)
+			{
+				if (!ImGui::TreeNode(window, "%s '%s', %d @ 0x%p", label, window->Name, window->Active || window->WasActive, window))
+					return;
+				NodeDrawList(window->DrawList, "DrawList");
+				if (window->RootWindow != window) NodeWindow(window->RootWindow, "RootWindow");
+				if (window->DC.ChildWindows.Size > 0) NodeWindows(window->DC.ChildWindows, "ChildWindows");
+				ImGui::BulletText("Storage: %d bytes", window->StateStorage.Data.Size * (int)sizeof(ImGuiStorage::Pair));
+				ImGui::TreePop();
+			}
+		};
+
+		ImGuiState& g = *GImGui;                // Access private state
+		Funcs::NodeWindows(g.Windows, "Windows");
+		if (ImGui::TreeNode("DrawList", "Active DrawLists (%d)", g.RenderDrawLists[0].Size))
+		{
+			for (int i = 0; i < g.RenderDrawLists[0].Size; i++)
+				Funcs::NodeDrawList(g.RenderDrawLists[0][i], "DrawList");
+			ImGui::TreePop();
+		}
+		if (ImGui::TreeNode("Popups", "Opened Popups Stack (%d)", g.OpenedPopupStack.Size))
+		{
+			for (int i = 0; i < g.OpenedPopupStack.Size; i++)
+			{
+				ImGuiWindow* window = g.OpenedPopupStack[i].Window;
+				ImGui::BulletText("PopupID: %08x, Window: '%s'%s%s", g.OpenedPopupStack[i].PopupID, window ? window->Name : "NULL", window && (window->Flags & ImGuiWindowFlags_ChildWindow) ? " ChildWindow" : "", window && (window->Flags & ImGuiWindowFlags_ChildMenu) ? " ChildMenu" : "");
+			}
+			ImGui::TreePop();
+		}
+		if (ImGui::TreeNode("Basic state"))
+		{
+			ImGui::Text("FocusedWindow: '%s'", g.FocusedWindow ? g.FocusedWindow->Name : "NULL");
+			ImGui::Text("HoveredWindow: '%s'", g.HoveredWindow ? g.HoveredWindow->Name : "NULL");
+			ImGui::Text("HoveredRootWindow: '%s'", g.HoveredRootWindow ? g.HoveredRootWindow->Name : "NULL");
+			ImGui::Text("HoveredID: 0x%08X/0x%08X", g.HoveredId, g.HoveredIdPreviousFrame); // Data is "in-flight" so depending on when the Metrics window is called we may see current frame information or not
+			ImGui::Text("ActiveID: 0x%08X/0x%08X", g.ActiveId, g.ActiveIdPreviousFrame);
+			ImGui::TreePop();
+		}
+	}
+	ImGui::End(); 
+}
+
+
 void GameEngineImpl::RenderUI(class GraphicsContext& gfxContext)
 {
+
+	//static bool showMetricsWindow;
+	//ShowMetricsWindow(&showMetricsWindow);
+
+	//implementation
 	__declspec(align(16)) struct
 	{
 		Vector3 sunDirection;
@@ -339,7 +485,6 @@ void GameEngineImpl::RenderUI(class GraphicsContext& gfxContext)
 		bool show_test_window = true;
 
 
-		ImGuiStyle& style = ImGui::GetStyle();
 
 		//ImGui::SetNextWindowSize(ImVec2(200, 100), ImGuiSetCond_FirstUseEver);
 		//ImGui::Begin("Another Window", &show_test_window);
@@ -413,6 +558,70 @@ void GameEngineImpl::RenderUI(class GraphicsContext& gfxContext)
 	gfxContext.SetViewportAndScissor(0, 0, g_OverlayBuffer.GetWidth(), g_OverlayBuffer.GetHeight());
 
 };
+
+
+
+
+Platform::String ^ WaitForAsync(Windows::Foundation::IAsyncOperation<Platform::String ^> ^A)
+{
+	while (A->Status == Windows::Foundation::AsyncStatus::Started)
+	{
+		Windows::UI::Core::CoreWindow::GetForCurrentThread()->Dispatcher->
+			ProcessEvents(Windows::UI::Core::CoreProcessEventsOption::ProcessAllIfPresent);
+	}
+
+	Windows::Foundation::AsyncStatus S = A->Status;
+
+	assert(A->Status == Windows::Foundation::AsyncStatus::Completed);
+
+	return A->GetResults();
+	
+}
+
+
+static const char* GetClipboardTextFn_DefaultImpl()
+{
+	auto content=Windows::ApplicationModel::DataTransfer::Clipboard::GetContent();
+
+	auto t = content->GetTextAsync();
+
+	auto retstr=WaitForAsync(t);
+
+	std::wstring fooW(retstr->Begin());
+	std::string fooA(fooW.begin(), fooW.end());
+	
+	auto result= fooA.c_str();
+
+	size_t length = fooA.length();
+
+	char *retval=(char *)ImGui::MemAlloc(length+1);
+
+
+	memcpy(retval, result, length+1);
+
+	return  retval;
+
+
+}
+
+static void SetClipboardTextFn_DefaultImpl(const char* text)
+{
+
+	std::string s_str = std::string(text);
+	std::wstring wid_str = std::wstring(s_str.begin(), s_str.end());
+	const wchar_t* w_char = wid_str.c_str();
+	Platform::String^ p_string = ref new Platform::String(w_char);
+
+
+	auto dataPackage = ref new Windows::ApplicationModel::DataTransfer::DataPackage();
+
+	dataPackage->SetText(p_string);
+
+	Windows::ApplicationModel::DataTransfer::Clipboard::SetContent(dataPackage);
+
+	int z = 15;
+}
+
 
 
 inline void* MemAllocFn(size_t sz)
@@ -527,13 +736,69 @@ void GameEngineImpl::Startup(void)
 	ImGuiIO& io = ImGui::GetIO();
 
 
+	io.KeyMap[ImGuiKey_Tab] = VK_TAB;
+    io.KeyMap[ImGuiKey_LeftArrow] = VK_LEFT;
+    io.KeyMap[ImGuiKey_RightArrow] = VK_RIGHT;
+    io.KeyMap[ImGuiKey_UpArrow] = VK_UP;
+    io.KeyMap[ImGuiKey_DownArrow] = VK_DOWN;
+    io.KeyMap[ImGuiKey_PageUp] = VK_PRIOR;
+    io.KeyMap[ImGuiKey_PageDown] = VK_NEXT;
+    io.KeyMap[ImGuiKey_Home] = VK_HOME;
+    io.KeyMap[ImGuiKey_End] = VK_END;
+    io.KeyMap[ImGuiKey_Delete] = VK_DELETE;
+    io.KeyMap[ImGuiKey_Backspace] = VK_BACK;
+    io.KeyMap[ImGuiKey_Enter] = VK_RETURN;
+    io.KeyMap[ImGuiKey_Escape] = VK_ESCAPE;
+	io.KeyMap[ImGuiKey_A] = 'A';
+	io.KeyMap[ImGuiKey_C] = 'C';
+	io.KeyMap[ImGuiKey_V] = 'V';
+	io.KeyMap[ImGuiKey_X] = 'X';
+	io.KeyMap[ImGuiKey_Y] = 'Y';
+	io.KeyMap[ImGuiKey_Z] = 'Z';
+
+
+
+	ImGuiStyle& style = ImGui::GetStyle();
+	style.FrameRounding = 0;
+
+
+
+
+
+
 	io.MemAllocFn = MemAllocFn;
 	io.MemFreeFn = MemFreeFn;
+	io.GetClipboardTextFn = GetClipboardTextFn_DefaultImpl;
+	io.SetClipboardTextFn = SetClipboardTextFn_DefaultImpl;
 
 	unsigned char* pixels = 0;
 	int width, height;
 
+	ImFontConfig config;
+	config.OversampleH = 1;
+	config.OversampleV = 1;
+	config.PixelSnapH = true;
+	config.GlyphExtraSpacing.x = 1.0f;
+	
+
+
+
+
+
+	io.Fonts->AddFontFromFileTTF("assets/consola.ttf", 26, &config, io.Fonts->GetGlyphRangesDefault());
+	io.Fonts->AddFontFromFileTTF("assets/consola.ttf", 26, &config, io.Fonts->GetGlyphRangesCyrillic());
+	io.Fonts->AddFontFromFileTTF("assets/consolab.ttf", 26, &config, io.Fonts->GetGlyphRangesDefault());
+	io.Fonts->AddFontFromFileTTF("assets/consolab.ttf", 26, &config, io.Fonts->GetGlyphRangesCyrillic());
+	io.Fonts->AddFontFromFileTTF("assets/consolai.ttf", 26, &config, io.Fonts->GetGlyphRangesDefault());
+	io.Fonts->AddFontFromFileTTF("assets/consolai.ttf", 26, &config, io.Fonts->GetGlyphRangesCyrillic());
+	io.Fonts->AddFontFromFileTTF("assets/consolaz.ttf", 26, &config, io.Fonts->GetGlyphRangesDefault());
+	io.Fonts->AddFontFromFileTTF("assets/consolaz.ttf", 26, &config, io.Fonts->GetGlyphRangesCyrillic());
+
+
 	io.Fonts->GetTexDataAsRGBA32(&pixels, &width, &height);
+
+	// use ImGui::PushFont()/ImGui::PopFont() to change the font at runtime
+
 
 
 

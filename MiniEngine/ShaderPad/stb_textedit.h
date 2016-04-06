@@ -689,11 +689,31 @@ retry:
                   state->has_preferred_x = 0;
                }
             } else {
-               stb_textedit_delete_selection(str,state); // implicity clamps
-               if (STB_TEXTEDIT_INSERTCHARS(str, state->cursor, &ch, 1)) {
-                  stb_text_makeundo_insert(state, state->cursor, 1);
-                  ++state->cursor;
-                  state->has_preferred_x = 0;
+				
+				if (c == '\n')
+				{
+					stb_textedit_delete_selection(str, state); // implicity clamps
+
+					auto ident = scan_ident(str, state->cursor, &ch, 1);
+
+					ident = L'\n'+ident;
+
+					if (STB_TEXTEDIT_INSERTCHARS(str, state->cursor, (const ImWchar *)ident.data(), ident.length()))
+					{
+						stb_text_makeundo_insert(state, state->cursor, 1);
+						state->cursor= state->cursor+ident.length();
+						state->has_preferred_x = 0;
+					}
+				}
+				else
+				{
+					stb_textedit_delete_selection(str,state); // implicity clamps
+					if (STB_TEXTEDIT_INSERTCHARS(str, state->cursor, &ch, 1)) 
+					{
+						stb_text_makeundo_insert(state, state->cursor, 1);
+						++state->cursor;
+						state->has_preferred_x = 0;
+					}
                }
             }
          }

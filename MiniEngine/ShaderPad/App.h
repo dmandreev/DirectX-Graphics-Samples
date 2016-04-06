@@ -42,6 +42,11 @@ namespace ShaderPad
 			_In_ Windows::UI::Core::KeyEventArgs^ args
 			);
 
+		void OnCharacterReceived(
+			Windows::UI::Core::CoreWindow ^sender,
+			Windows::UI::Core::CharacterReceivedEventArgs ^args
+			);
+
 		void OnKeyUp(
 			_In_ Windows::UI::Core::CoreWindow^ sender,
 			_In_ Windows::UI::Core::KeyEventArgs^ args
@@ -79,6 +84,14 @@ namespace ShaderPad
 
 
 		char kb_map[256];
+
+		struct kbst
+		{
+			bool pressed = false;
+			int keyb_code = -1;
+		};
+
+		kbst kb_status[256];
 
 		bool m_tracking = true;
 

@@ -2,6 +2,7 @@
 #include "App.h"
 
 #include <ppltasks.h>
+#include "imgui.h"
 
 using namespace ShaderPad;
 
@@ -107,6 +108,8 @@ void App::SetWindow(CoreWindow^ window)
 	window->PointerMoved +=
 		ref new TypedEventHandler<CoreWindow^, PointerEventArgs^>(this, &App::OnPointerMoved);
 
+	window->CharacterReceived += ref new TypedEventHandler < CoreWindow^, CharacterReceivedEventArgs^>(this, &App::OnCharacterReceived);
+
 }
 
 typedef struct _DIMOUSESTATE2 {
@@ -143,6 +146,15 @@ void App::OnKeyDown(
 	_In_ KeyEventArgs^ args
 	)
 {
+
+	ImGuiIO& io = ImGui::GetIO();
+
+	io.KeysDown[static_cast<char>(args->VirtualKey)] = 1;
+
+	kb_status[static_cast<char>(args->VirtualKey)].pressed = true;
+
+
+
 	s_Keybuffer[kb_map[static_cast<char>(args->VirtualKey)]] = 128;
 
 	if (args->VirtualKey == Windows::System::VirtualKey::Escape)
@@ -173,6 +185,42 @@ void App::OnPointerPressed(
 {
 	gameEngineImpl.PointerPressed();
 }
+
+void App::OnCharacterReceived(
+	Windows::UI::Core::CoreWindow ^sender,
+	Windows::UI::Core::CharacterReceivedEventArgs ^args
+	)
+{
+
+	ImGuiIO& io = ImGui::GetIO();
+
+
+	io.AddInputCharacter(args->KeyCode);
+
+	kb_status[static_cast<char>(args->KeyStatus.ScanCode)].keyb_code = args->KeyCode;
+
+	auto code=args->KeyCode;
+
+	//_sprint
+	args->KeyStatus.IsExtendedKey;
+	args->KeyStatus.IsKeyReleased;
+	args->KeyStatus.IsMenuKeyDown;
+	args->KeyStatus.ScanCode;
+	args->KeyStatus.WasKeyDown;
+
+
+	DEBUGPRINT(L"%c %d isext:%d iskeyreleased:%d ismenukeydown:%d ScanCode:%d waskeyd%d", code, code,
+		args->KeyStatus.IsExtendedKey,
+		args->KeyStatus.IsKeyReleased,
+		args->KeyStatus.IsMenuKeyDown,
+		args->KeyStatus.ScanCode,
+		args->KeyStatus.WasKeyDown
+		);
+
+
+	int q = 15;
+}
+
 
 void App::OnPointerReleased(
 	_In_ Windows::UI::Core::CoreWindow^ sender,
@@ -228,7 +276,14 @@ void App::OnKeyUp(
 	_In_ KeyEventArgs^ args
 	)
 {
+	kb_status[static_cast<char>(args->VirtualKey)].pressed = false;
+	kb_status[static_cast<char>(args->VirtualKey)].keyb_code = -1;
+
 	s_Keybuffer[kb_map[(int)args->VirtualKey]] = 0;
+
+	ImGuiIO& io = ImGui::GetIO();
+	io.KeysDown[static_cast<char>(args->VirtualKey)] = 0;
+
 }
 
 

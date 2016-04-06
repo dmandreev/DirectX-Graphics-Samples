@@ -371,6 +371,12 @@
       <Project>{652ba0dc-e42c-4a60-975c-8d62a5553412}</Project>
     </ProjectReference>
   </ItemGroup>
+  <ItemGroup>
+    <Font Include="Assets\consola.ttf" />
+    <Font Include="Assets\consolab.ttf" />
+    <Font Include="Assets\consolai.ttf" />
+    <Font Include="Assets\consolaz.ttf" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
     <Import Project="$(VSINSTALLDIR)\Common7\IDE\Extensions\Microsoft\VsGraphics\ImageContentTask.targets" />
