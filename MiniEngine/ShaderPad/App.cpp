@@ -114,7 +114,7 @@ void App::SetWindow(CoreWindow^ window)
 
 	window->CharacterReceived += ref new TypedEventHandler < CoreWindow^, CharacterReceivedEventArgs^>(this, &App::OnCharacterReceived);
 
-	window->PointerWheelChanged += ref new Windows::Foundation::TypedEventHandler<Windows::UI::Core::CoreWindow ^, Windows::UI::Core::PointerEventArgs ^>(this, &ShaderPad::App::OnPointerWheelChanged);
+	//window->PointerWheelChanged += ref new Windows::Foundation::TypedEventHandler<Windows::UI::Core::CoreWindow ^, Windows::UI::Core::PointerEventArgs ^>(this, &ShaderPad::App::OnPointerWheelChanged);
 
 }
 
@@ -316,10 +316,10 @@ void App::Run()
 		{
 			CoreWindow::GetForCurrentThread()->Dispatcher->ProcessEvents(CoreProcessEventsOption::ProcessAllIfPresent);
 			{
-
 				GameCore::UpdateApplication(gameEngineImpl);
-
 				memset(&s_MouseState, 0, sizeof(s_MouseState));
+
+
 			}
 		}
 		else

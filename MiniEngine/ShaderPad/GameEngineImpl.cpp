@@ -49,7 +49,7 @@ void GameEngineImpl::Update(float deltaT)
 
 
 	io.MouseDown[0] = pointerPressed;
-	io.MouseWheel;
+
 
 	//Windows::ApplicationModel::DataTransfer::Clipboard::
 
@@ -432,6 +432,7 @@ void ShowMetricsWindow(bool* opened)
 
 void GameEngineImpl::RenderUI(class GraphicsContext& gfxContext)
 {
+	return;
 
 	//static bool showMetricsWindow;
 	//ShowMetricsWindow(&showMetricsWindow);

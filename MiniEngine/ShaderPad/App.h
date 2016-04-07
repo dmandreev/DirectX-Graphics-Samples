@@ -4,6 +4,7 @@
 
 #include "GameEngineImpl.h"
 #include <concrt.h>
+#include "imgui.h"
 
 namespace ShaderPad
 {
@@ -82,6 +83,10 @@ namespace ShaderPad
 				auto pt = pts->GetAt(0);
 
 				auto delta = pt->Properties->MouseWheelDelta;
+
+				ImGuiIO& io = ImGui::GetIO();
+
+				io.MouseWheel = (float)delta / (120.0f*10000.0f); //TODO: units???
 
 				int z = 5;
 			}
