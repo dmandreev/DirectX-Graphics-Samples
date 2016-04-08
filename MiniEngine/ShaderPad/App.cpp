@@ -114,7 +114,7 @@ void App::SetWindow(CoreWindow^ window)
 
 	window->CharacterReceived += ref new TypedEventHandler < CoreWindow^, CharacterReceivedEventArgs^>(this, &App::OnCharacterReceived);
 
-	//window->PointerWheelChanged += ref new Windows::Foundation::TypedEventHandler<Windows::UI::Core::CoreWindow ^, Windows::UI::Core::PointerEventArgs ^>(this, &ShaderPad::App::OnPointerWheelChanged);
+	window->PointerWheelChanged += ref new Windows::Foundation::TypedEventHandler<Windows::UI::Core::CoreWindow ^, Windows::UI::Core::PointerEventArgs ^>(this, &ShaderPad::App::OnPointerWheelChanged);
 
 }
 
@@ -165,6 +165,9 @@ void App::OnKeyDown(
 
 
 	s_Keybuffer[kb_map[(size_t)args->VirtualKey]] = 128;
+
+	if (args->VirtualKey == Windows::System::VirtualKey::Q)
+		m_windowClosed = true;
 
 	if (args->VirtualKey == Windows::System::VirtualKey::Escape)
 	{

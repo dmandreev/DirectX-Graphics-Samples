@@ -432,8 +432,6 @@ void ShowMetricsWindow(bool* opened)
 
 void GameEngineImpl::RenderUI(class GraphicsContext& gfxContext)
 {
-	return;
-
 	//static bool showMetricsWindow;
 	//ShowMetricsWindow(&showMetricsWindow);
 

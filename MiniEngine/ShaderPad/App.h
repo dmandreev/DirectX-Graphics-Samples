@@ -86,7 +86,7 @@ namespace ShaderPad
 
 				ImGuiIO& io = ImGui::GetIO();
 
-				io.MouseWheel = (float)delta / (120.0f*10000.0f); //TODO: units???
+				io.MouseWheel = 120/(float)delta; //TODO: units???
 
 				int z = 5;
 			}
