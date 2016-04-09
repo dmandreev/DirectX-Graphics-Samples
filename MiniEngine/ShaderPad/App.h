@@ -104,7 +104,7 @@ namespace ShaderPad
 		char kb_map[256];
 
 
-		bool m_tracking = true;
+		bool m_tracking = false;
 
 	};
 }

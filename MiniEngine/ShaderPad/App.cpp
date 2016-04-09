@@ -66,7 +66,7 @@ void App::Initialize(CoreApplicationView^ applicationView)
 // Called when the CoreWindow object is created (or re-created).
 void App::SetWindow(CoreWindow^ window)
 {
-	window->PointerCursor = nullptr;
+	window->PointerCursor = !m_tracking?ref new CoreCursor(CoreCursorType::Arrow, 0):nullptr;
 
 
 	window->SizeChanged += 
@@ -79,11 +79,13 @@ void App::SetWindow(CoreWindow^ window)
 	window->Closed += 
 		ref new TypedEventHandler<CoreWindow^, CoreWindowEventArgs^>(this, &App::OnWindowClosed);
 
+	/*
 	window->KeyDown +=
 		ref new TypedEventHandler<CoreWindow^, KeyEventArgs^>(this, &App::OnKeyDown);
 
 	window->KeyUp +=
 		ref new TypedEventHandler<CoreWindow^, KeyEventArgs^>(this, &App::OnKeyUp);
+		*/
 
 	MouseDevice::GetForCurrentView()->MouseMoved +=
 		ref new TypedEventHandler<MouseDevice^, MouseEventArgs^>(this, &App::OnMouseMoved);
@@ -158,16 +160,16 @@ void App::OnKeyDown(
 	ImGuiIO& io = ImGui::GetIO();
 
 
+	/*
 	if ((size_t)args->VirtualKey<256)
 		io.KeysDown[(size_t)args->VirtualKey] = true;
+	*/
 
 
 
+	if (m_tracking)
+		s_Keybuffer[kb_map[(size_t)args->VirtualKey]] = 128;
 
-	s_Keybuffer[kb_map[(size_t)args->VirtualKey]] = 128;
-
-	if (args->VirtualKey == Windows::System::VirtualKey::Q)
-		m_windowClosed = true;
 
 	if (args->VirtualKey == Windows::System::VirtualKey::Escape)
 	{
@@ -177,7 +179,9 @@ void App::OnKeyDown(
 		{
 			if (m_tracking)
 			{
+
 				CoreWindow::GetForCurrentThread()->PointerCursor = ref new CoreCursor(CoreCursorType::Arrow, 0);
+
 				m_tracking = false;
 			}
 			else
@@ -288,12 +292,13 @@ void App::OnKeyUp(
 	)
 {
 
-	s_Keybuffer[kb_map[(size_t)args->VirtualKey]] = 0;
+	if (m_tracking)
+		s_Keybuffer[kb_map[(size_t)args->VirtualKey]] = 0;
 
 	ImGuiIO& io = ImGui::GetIO();
 
-	if ((size_t)args->VirtualKey<256)
-		io.KeysDown[(size_t)(args->VirtualKey)] = 0;
+	//if ((size_t)args->VirtualKey<256)
+		//io.KeysDown[(size_t)(args->VirtualKey)] = 0;
 
 }
 

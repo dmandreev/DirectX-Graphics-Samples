@@ -2,6 +2,8 @@
 #include "GameEngineImpl.h"
 
 
+#include <codecvt>
+#include <locale>
 #include "imconfig.h"
 #include "imgui.h"
 #include "imgui_internal.h"
@@ -24,18 +26,16 @@ NumVar ShadowDimZ("Application/Shadow Dim Z", 3000, 1000, 10000, 100);
 
 
 
-void GameEngineImpl::Update(float deltaT) 
+void GameEngineImpl::Update(float deltaT)
 {
 	ScopedTimer _prof(L"Update State");
 
-	auto window=Windows::UI::Core::CoreWindow::GetForCurrentThread();
+	auto window = Windows::UI::Core::CoreWindow::GetForCurrentThread();
 
-	//auto mousePosX = window->PointerPosition.X; //-window->Bounds.X;
-	//auto mousePosY = window->PointerPosition.Y;// -window->Bounds.Y;
 
 
 	auto mousePosX = floorf((window->PointerPosition.X - window->Bounds.X) * m_dpi / 96.0f);
-	auto mousePosY = floorf((window->PointerPosition.Y - window->Bounds.Y)* m_dpi / 96.0f );
+	auto mousePosY = floorf((window->PointerPosition.Y - window->Bounds.Y)* m_dpi / 96.0f);
 
 
 	ImGuiIO& io = ImGui::GetIO();
@@ -62,16 +62,17 @@ void GameEngineImpl::Update(float deltaT)
 	};
 	*/
 
-	io.KeyCtrl = io.KeysDown[VK_CONTROL];
-	io.KeyShift = io.KeysDown[VK_SHIFT];
 
-	
+	void * addr = &io.KeysDown;
+
+	void * addr1 = &io.KeysDown[VK_ESCAPE];
+
 
 
 	//	window->GetKeyState(Windows::System::VirtualKey(Windows::System::VirtualKey::Control))
 
 		//;
-	
+
 	//io.KeyShift = Windows::UI::Core::CoreVirtualKeyStates::Down == 
 		//window->GetKeyState(Windows::System::VirtualKey(Windows::System::VirtualKey::Shift))
 		//;
@@ -83,16 +84,100 @@ void GameEngineImpl::Update(float deltaT)
 	//keyst = window->GetKeyState(Windows::System::VirtualKey(Windows::System::VirtualKey::RightShift));
 
 
+	static bool init = true;
+	static DWORD kbd_arr[256];
 
-	
+	if (init)
+	{
+		for (int i = 0; i < 255; i++)
+		{
+			DWORD new_keystate = (DWORD)window->GetKeyState(Windows::System::VirtualKey(i));
+			kbd_arr[i] = new_keystate;
+		}
+
+		init = false;
+	}
 
 
 
-	//io.KeysDown()
+	for (size_t i = 0; i< 256; i++)
+	{
+		DWORD new_keystate = (DWORD)window->GetKeyState(Windows::System::VirtualKey(i));
+
+
+		if (new_keystate != kbd_arr[i])
+		{
+			if (new_keystate & 1U)
+			{
+				io.KeysDown[i] = true;
+			}
+			else
+			{
+				io.KeysDown[i] = false;
+			}
+		}
+
+
+		kbd_arr[i] = new_keystate;
+	};
+
+
+	io.KeyCtrl = io.KeysDown[VK_CONTROL];
+	io.KeyShift = io.KeysDown[VK_SHIFT];
+	io.KeyAlt = io.KeysDown[VK_MENU];
+
+
+
+
+
 
 
 
 	ImGui::NewFrame();
+
+	static bool showUI = true;
+	static bool free = true;
+
+	//messy, but works
+	if (io.KeysDown[VK_ESCAPE])
+	{
+		if (free)
+		{
+			showUI = !showUI;
+			free = false;
+		}
+	}
+
+	if (!free)
+	{
+		free = io.KeysDown[VK_ESCAPE] == false;
+	}
+
+	if (showUI)
+	{
+		ImGui::ShowTestWindow();
+	}
+	
+
+
+
+	static bool show_test_window = true;
+
+
+
+	if (showUI)
+	{
+		ImGui::SetNextWindowSize(ImVec2(200, 100), ImGuiSetCond_FirstUseEver);
+		ImGui::Begin("Another Window", &show_test_window);
+
+
+
+
+
+		ImGui::Text("Hello");
+		ImGui::End();
+	}
+
 
 	
 
@@ -432,6 +517,8 @@ void ShowMetricsWindow(bool* opened)
 
 void GameEngineImpl::RenderUI(class GraphicsContext& gfxContext)
 {
+
+
 	//static bool showMetricsWindow;
 	//ShowMetricsWindow(&showMetricsWindow);
 
@@ -496,20 +583,11 @@ void GameEngineImpl::RenderUI(class GraphicsContext& gfxContext)
 
 		//gfxContext.DrawIndexed(3, 0);
 
-		bool show_test_window = true;
-
-
-
-		//ImGui::SetNextWindowSize(ImVec2(200, 100), ImGuiSetCond_FirstUseEver);
-		//ImGui::Begin("Another Window", &show_test_window);
-		//ImGui::Text("Hello");
-		//ImGui::DragFloat("Global Alpha", &style.Alpha, 0.005f, 0.20f, 1.0f, "%.2f");
-		//ImGui::End();
 
 		//style.WindowFillAlphaDefault = .3;
 		//ImGui::ShowStyleEditor(&style);
 
-		ImGui::ShowTestWindow();
+	
 		
 
 		ImGui::Render();
@@ -569,8 +647,36 @@ void GameEngineImpl::RenderUI(class GraphicsContext& gfxContext)
 		}
 	}
 
-	//mouse wheel clean?
-	//kbd clean??
+
+
+	ImGuiIO& io = ImGui::GetIO();
+
+
+
+	auto window = Windows::UI::Core::CoreWindow::GetForCurrentThread();
+
+	
+	/*
+	for (size_t i = 0; i< 256; i++)
+	{
+		if (io.KeysDown[i])
+		{
+			auto keystate=window->GetKeyState(Windows::System::VirtualKey(i));
+
+			if (keystate != Windows::UI::Core::CoreVirtualKeyStates::Down)
+			{
+				io.KeysDown[i] = false;
+			}
+		}
+	};
+	*/
+
+
+
+	io.KeyCtrl = io.KeysDown[VK_CONTROL];
+	io.KeyShift = io.KeysDown[VK_SHIFT];
+
+
 
 	gfxContext.SetViewportAndScissor(0, 0, g_OverlayBuffer.GetWidth(), g_OverlayBuffer.GetHeight());
 
@@ -602,19 +708,26 @@ static const char* GetClipboardTextFn_DefaultImpl()
 
 	auto t = content->GetTextAsync();
 
+	//TODO:dangerous
 	auto retstr=WaitForAsync(t);
 
 	std::wstring fooW(retstr->Begin());
-	std::string fooA(fooW.begin(), fooW.end());
-	
-	auto result= fooA.c_str();
 
-	size_t length = fooA.length();
+
+	std::wstring_convert<std::codecvt_utf8<wchar_t>> utf8_conv;
+	
+	auto b=utf8_conv.to_bytes(fooW);
+
+
+
+
+	size_t length = b.length();
 
 	char *retval=(char *)ImGui::MemAlloc(length+1);
 
+	
 
-	memcpy(retval, result, length+1);
+	memcpy(retval, b.data(), length+1);
 
 	return  retval;
 
@@ -624,8 +737,18 @@ static const char* GetClipboardTextFn_DefaultImpl()
 static void SetClipboardTextFn_DefaultImpl(const char* text)
 {
 
-	std::string s_str = std::string(text);
-	std::wstring wid_str = std::wstring(s_str.begin(), s_str.end());
+	//TODO: tab 2/4 length
+
+	wchar_t *buf = (wchar_t *)alloca((strlen(text) + 1)*2);
+
+	auto convresult=ImTextStrFromUtf8(
+		(ImWchar *)buf
+		,(strlen(text) + 1) * 2,
+		text, 
+		nullptr);
+
+
+	std::wstring wid_str = std::wstring(buf);
 	const wchar_t* w_char = wid_str.c_str();
 	Platform::String^ p_string = ref new Platform::String(w_char);
 
@@ -775,6 +898,11 @@ void GameEngineImpl::Startup(void)
 
 
 
+	void * addr = &io.KeysDown;
+
+	void * addr1 = &io.KeysDown[VK_ESCAPE];
+
+
 	ImGuiStyle& style = ImGui::GetStyle();
 	style.FrameRounding = 0;
 
@@ -782,7 +910,7 @@ void GameEngineImpl::Startup(void)
 
 
 
-	auto addr = (DWORD)&io.MemAllocFn;
+	//auto addr = (DWORD)&io.MemAllocFn;
 
 	io.MemAllocFn = MemAllocFn;
 	io.MemFreeFn = MemFreeFn;
@@ -793,10 +921,13 @@ void GameEngineImpl::Startup(void)
 	int width, height;
 
 	ImFontConfig config;
+	ZeroMemory(&config, sizeof(config));
+
 	config.OversampleH = 1;
 	config.OversampleV = 1;
 	config.PixelSnapH = true;
 	config.GlyphExtraSpacing.x = 1.0f;
+
 	
 
 
@@ -804,13 +935,17 @@ void GameEngineImpl::Startup(void)
 
 
 	io.Fonts->AddFontFromFileTTF("assets/consola.ttf", 26, &config, io.Fonts->GetGlyphRangesDefault());
+	config.MergeMode = true;
 	io.Fonts->AddFontFromFileTTF("assets/consola.ttf", 26, &config, io.Fonts->GetGlyphRangesCyrillic());
+
+	/*
 	io.Fonts->AddFontFromFileTTF("assets/consolab.ttf", 26, &config, io.Fonts->GetGlyphRangesDefault());
 	io.Fonts->AddFontFromFileTTF("assets/consolab.ttf", 26, &config, io.Fonts->GetGlyphRangesCyrillic());
 	io.Fonts->AddFontFromFileTTF("assets/consolai.ttf", 26, &config, io.Fonts->GetGlyphRangesDefault());
 	io.Fonts->AddFontFromFileTTF("assets/consolai.ttf", 26, &config, io.Fonts->GetGlyphRangesCyrillic());
 	io.Fonts->AddFontFromFileTTF("assets/consolaz.ttf", 26, &config, io.Fonts->GetGlyphRangesDefault());
 	io.Fonts->AddFontFromFileTTF("assets/consolaz.ttf", 26, &config, io.Fonts->GetGlyphRangesCyrillic());
+	*/
 
 
 	io.Fonts->GetTexDataAsRGBA32(&pixels, &width, &height);
@@ -860,6 +995,9 @@ void GameEngineImpl::Startup(void)
 	m_ExtraTextures[1] = g_ShadowBuffer.GetSRV();
 
 	TextureManager::Initialize(L"Textures/");
+
+
+
 
 
 
