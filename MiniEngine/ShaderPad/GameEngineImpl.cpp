@@ -121,7 +121,7 @@ void FindReplace(string& line, string& oldString, string& newString) {
 void GameEngineImpl::Update(float deltaT)
 {
 	ScopedTimer _prof(L"Update State");
-
+	total_time = total_time + deltaT;
 	if (dynamic_shader_ps_blob != dynamic_shader_ps_blob_old)
 	{
 
@@ -240,12 +240,18 @@ void GameEngineImpl::Update(float deltaT)
 
 	if (showUI)
 	{
-		ImGui::SetNextWindowSize(ImVec2(26 * 40, 26 * 24), ImGuiSetCond_FirstUseEver);
+		ImGui::SetNextWindowSize(ImVec2(fontSize * 40, fontSize * 24), ImGuiSetCond_FirstUseEver);
 		ImGui::SetNextWindowPosCenter(ImGuiSetCond_FirstUseEver);
 
 
 
-		ImGui::Begin("Editor Window", &show_test_window, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse);
+		//ImGuiWindowFlags_HorizontalScrollbar = 1 << 11,  // Allow horizontal scrollbar to appear (off by default). 
+			//You need to use SetNextWindowContentSize(ImVec2(width,0.0f)); prior to calling Begin() to specify width. 
+			//Read code in imgui_demo in the "Horizontal Scrolling" section.
+
+
+		ImGui::Begin("Editor Window", &show_test_window, ImGuiWindowFlags_NoTitleBar
+			);
 
 
 
@@ -293,15 +299,19 @@ void GameEngineImpl::Update(float deltaT)
 
 					ComPtr<ID3DBlob> blob;
 
-					HRESULT hr = D3DCompile(txt.c_str(), txt.length() + 1, "ps.hlsl", Shader_Macros, &include_handler, "main", "ps_5_0", //"ps_5_0" "ps_3_0", 
+					HRESULT hr = S_FALSE;
+
+						hr = D3DCompile(txt.data(), txt.length(), "ps.hlsl", Shader_Macros, &include_handler, "main", "ps_5_1", //"ps_5_0" "ps_3_0", 
 #ifdef _DEBUG
-						D3DCOMPILE_DEBUG
-						//D3DCOMPILE_OPTIMIZATION_LEVEL2 | D3DCOMPILE_SKIP_VALIDATION | D3DCOMPILE_SKIP_OPTIMIZATION
+							D3DCOMPILE_DEBUG
+							//D3DCOMPILE_OPTIMIZATION_LEVEL2 | D3DCOMPILE_SKIP_VALIDATION | D3DCOMPILE_SKIP_OPTIMIZATION
 #else
-																											//D3DCOMPILE_OPTIMIZATION_LEVEL3
-						D3DCOMPILE_OPTIMIZATION_LEVEL2 | D3DCOMPILE_SKIP_VALIDATION //| D3DCOMPILE_SKIP_OPTIMIZATION
+																																	 //D3DCOMPILE_OPTIMIZATION_LEVEL3
+							D3DCOMPILE_OPTIMIZATION_LEVEL2 | D3DCOMPILE_SKIP_VALIDATION //| D3DCOMPILE_SKIP_OPTIMIZATION
 #endif
-						, 0, &blob, &errors);
+							, 0, &blob, &errors);
+
+
 
 					if (hr == S_OK)
 					{
@@ -311,20 +321,25 @@ void GameEngineImpl::Update(float deltaT)
 					}
 					else
 					{
-						size_t arr_err_size = errors->GetBufferSize();
+						char *ptr = nullptr;
+						if (errors != nullptr)
+						{
+							size_t arr_err_size = errors->GetBufferSize();
 
 
 
 
-						char *ptr = new char[arr_err_size + 1];
+							ptr = new char[arr_err_size + 1];
 
-						char *msg = (char *)errors->GetBufferPointer();
-						memcpy(ptr, msg, arr_err_size);
+							char *msg = (char *)errors->GetBufferPointer();
+							memcpy(ptr, msg, arr_err_size);
+							//TODO:redundant?
+							ptr[arr_err_size] = 0;
 
-						//TODO:redundant?
-						ptr[arr_err_size] = 0;
+						}
 
-						auto err_str = std::string(ptr);
+
+						auto err_str = std::string(ptr?ptr:"fatal error");
 
 						int idx_of_last_slash = err_str.find("\\ps.hlsl");
 
@@ -342,10 +357,6 @@ void GameEngineImpl::Update(float deltaT)
 						last_compile_result = S_FALSE;
 					}
 
-
-
-
-
 					running = false;
 					});
 				}
@@ -357,8 +368,10 @@ void GameEngineImpl::Update(float deltaT)
 		}
 
 
+		ImGui::SetNextWindowPos(ImVec2(600,750),ImGuiSetCond_FirstUseEver);
+		ImGui::SetNextWindowSize(ImVec2(700, 200), ImGuiSetCond_FirstUseEver);
 		ImGui::Begin("Compilation results");
-		ImGui::Text("duration %f", duration);
+		//ImGui::Text("duration %f", duration);
 		ImGui::Text("%s", last_comile_error.c_str());
 		
 		ImGui::End();
@@ -500,13 +513,14 @@ void GameEngineImpl::RenderScene(void)
 		Vector3 sunLight;
 		Vector3 ambientLight;
 		float ShadowTexelSize;
+		float time;
 	} psConstants;
 
 	psConstants.sunDirection = m_SunDirection;
 	psConstants.sunLight = Vector3(1.0f, 1.0f, 1.0f) * m_SunLightIntensity;
 	psConstants.ambientLight = Vector3(0.2f, 0.2f, 0.2f);
 	psConstants.ShadowTexelSize = 1.0f / g_ShadowBuffer.GetWidth();
-
+	psConstants.time = total_time;
 	
 	{
 		ScopedTimer _prof(L"Z PrePass", gfxContext);
@@ -718,13 +732,14 @@ void GameEngineImpl::RenderUI(class GraphicsContext& gfxContext)
 		Vector3 sunLight;
 		Vector3 ambientLight;
 		float ShadowTexelSize;
+		float time;
 	} psConstants;
 
 	psConstants.sunDirection = m_SunDirection;
 	psConstants.sunLight = Vector3(1.0f, 1.0f, 1.0f);
 	psConstants.ambientLight = Vector3(0.2f, 0.2f, 0.2f);
 	psConstants.ShadowTexelSize = 1.0f / g_ShadowBuffer.GetWidth();
-
+	psConstants.time = total_time;
 	{
 
 		gfxContext.SetRootSignature(m_ImguiSig);
@@ -1123,9 +1138,9 @@ void GameEngineImpl::Startup(void)
 
 
 
-	io.Fonts->AddFontFromFileTTF("assets/consola.ttf", 26, &config, io.Fonts->GetGlyphRangesDefault());
+	io.Fonts->AddFontFromFileTTF("assets/consola.ttf", fontSize, &config, io.Fonts->GetGlyphRangesDefault());
 	config.MergeMode = true;
-	io.Fonts->AddFontFromFileTTF("assets/consola.ttf", 26, &config, io.Fonts->GetGlyphRangesCyrillic());
+	io.Fonts->AddFontFromFileTTF("assets/consola.ttf", fontSize, &config, io.Fonts->GetGlyphRangesCyrillic());
 
 	/*
 	io.Fonts->AddFontFromFileTTF("assets/consolab.ttf", 26, &config, io.Fonts->GetGlyphRangesDefault());

@@ -17,6 +17,7 @@ cbuffer PSConstants : register(b0)
 	float3 AmbientColor;
 	uint _pad;
 	float ShadowTexelSize;
+	float time;
 }
 
 

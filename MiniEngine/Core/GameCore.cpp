@@ -103,7 +103,7 @@ namespace GameCore
 		return true;
 	}
 
-#if WINAPI_FAMILY_PARTITION(WINAPI_PARTITION_DESKTOP)
+#if WINAPI_FAMILY_PARTITION(WINAPI_PARTITION_DESKTOP)r
 	HWND g_hWnd = nullptr;
 #endif
 

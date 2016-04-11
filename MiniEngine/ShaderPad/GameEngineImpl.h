@@ -169,5 +169,8 @@ private:
 
 	std::string last_comile_error;
 
+	static const size_t fontSize = 18;
+
+	float total_time = 0;
 
 };
