@@ -12,6 +12,7 @@
 
 
 using namespace Concurrency;
+using namespace std;
 
 namespace Graphics
 {
@@ -94,6 +95,28 @@ public:
 	std::string include_text;
 };
 
+void FindReplace(string& line, string& oldString, string& newString) {
+	const size_t oldSize = oldString.length();
+
+	// do nothing if line is shorter than the string to find
+	if (oldSize > line.length()) return;
+
+	const size_t newSize = newString.length();
+	for (size_t pos = 0; ; pos += newSize) {
+		// Locate the substring to replace
+		pos = line.find(oldString, pos);
+		if (pos == string::npos) return;
+		if (oldSize == newSize) {
+			// if they're same size, use std::string::replace
+			line.replace(pos, oldSize, newString);
+		}
+		else {
+			// if not same size, replace by erasing and inserting
+			line.erase(pos, oldSize);
+			line.insert(pos, newString);
+		}
+	}
+}
 
 void GameEngineImpl::Update(float deltaT)
 {
@@ -217,7 +240,7 @@ void GameEngineImpl::Update(float deltaT)
 
 	if (showUI)
 	{
-		ImGui::SetNextWindowSize(ImVec2(26 * 40, 26 * 16), ImGuiSetCond_FirstUseEver);
+		ImGui::SetNextWindowSize(ImVec2(26 * 40, 26 * 24), ImGuiSetCond_FirstUseEver);
 		ImGui::SetNextWindowPosCenter(ImGuiSetCond_FirstUseEver);
 
 
@@ -245,7 +268,9 @@ void GameEngineImpl::Update(float deltaT)
 		auto cmp = memcmp(shadertexttemp.c_str(), shader_text, shadertexttemp.length() + 1);
 		static float duration = 0;
 
-		static bool running = false;
+		static std::atomic_bool running = false;
+
+		
 
 		
 		if (running == false)
@@ -255,12 +280,8 @@ void GameEngineImpl::Update(float deltaT)
 				running = true;
 				std::string txt(shader_text);
 				duration = 0;
-				auto t = create_task([this, txt]()-> int
+				auto t = create_task([this, txt]()-> void
 				{
-					//int q = txt.size();
-					//concurrency::wait(1000);
-
-
 
 					ComPtr<ID3DBlob> errors;
 
@@ -270,6 +291,8 @@ void GameEngineImpl::Update(float deltaT)
 
 					CIncludeHandler include_handler;
 
+					ComPtr<ID3DBlob> blob;
+
 					HRESULT hr = D3DCompile(txt.c_str(), txt.length() + 1, "ps.hlsl", Shader_Macros, &include_handler, "main", "ps_5_0", //"ps_5_0" "ps_3_0", 
 #ifdef _DEBUG
 						D3DCOMPILE_DEBUG
@@ -278,22 +301,45 @@ void GameEngineImpl::Update(float deltaT)
 																											//D3DCOMPILE_OPTIMIZATION_LEVEL3
 						D3DCOMPILE_OPTIMIZATION_LEVEL2 | D3DCOMPILE_SKIP_VALIDATION //| D3DCOMPILE_SKIP_OPTIMIZATION
 #endif
-						, 0, &dynamic_shader_ps_blob, &errors);
+						, 0, &blob, &errors);
 
-					if (hr != S_OK)
+					if (hr == S_OK)
+					{
+						dynamic_shader_ps_blob = blob;
+						last_compile_result = S_OK;
+						last_comile_error = "";
+					}
+					else
 					{
 						size_t arr_err_size = errors->GetBufferSize();
 
 
+
+
+						char *ptr = new char[arr_err_size + 1];
+
 						char *msg = (char *)errors->GetBufferPointer();
-
-
-						char *ptr = new char[arr_err_size + sizeof(char)];
-
 						memcpy(ptr, msg, arr_err_size);
 
 						//TODO:redundant?
-						ptr[arr_err_size + 1] = 0;
+						ptr[arr_err_size] = 0;
+
+						auto err_str = std::string(ptr);
+
+						int idx_of_last_slash = err_str.find("\\ps.hlsl");
+
+						auto sub = err_str.substr(0, idx_of_last_slash);
+
+						auto final_msg = err_str;
+
+						FindReplace(final_msg, sub, string(""));
+
+
+						last_comile_error = std::string(final_msg);
+
+						delete ptr;
+
+						last_compile_result = S_FALSE;
 					}
 
 
@@ -301,7 +347,6 @@ void GameEngineImpl::Update(float deltaT)
 
 
 					running = false;
-					return 10;
 					});
 				}
 			}
@@ -309,14 +354,15 @@ void GameEngineImpl::Update(float deltaT)
 		{
 			duration = duration + io.DeltaTime;
 
-			ImGui::Begin("dur");
-			ImGui::Text("duration %f", duration);
-			ImGui::End();
 		}
 
-			int q = 15;
 
-		//ImGui::InputTextMultiline("##source", text, ARRAYSIZE(text), ImVec2(-1, -1), ImGuiInputTextFlags_AllowTabInput);
+		ImGui::Begin("Compilation results");
+		ImGui::Text("duration %f", duration);
+		ImGui::Text("%s", last_comile_error.c_str());
+		
+		ImGui::End();
+
 
 		ImGui::End();
 	}

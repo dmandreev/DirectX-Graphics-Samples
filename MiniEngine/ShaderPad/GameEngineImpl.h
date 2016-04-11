@@ -165,5 +165,9 @@ private:
 	ComPtr<ID3DBlob> dynamic_shader_ps_blob;
 	ComPtr<ID3DBlob> dynamic_shader_ps_blob_old;
 
+	std::atomic<HRESULT> last_compile_result = S_FALSE;
+
+	std::string last_comile_error;
+
 
 };
