@@ -79,13 +79,12 @@ void App::SetWindow(CoreWindow^ window)
 	window->Closed += 
 		ref new TypedEventHandler<CoreWindow^, CoreWindowEventArgs^>(this, &App::OnWindowClosed);
 
-	/*
+
 	window->KeyDown +=
 		ref new TypedEventHandler<CoreWindow^, KeyEventArgs^>(this, &App::OnKeyDown);
 
 	window->KeyUp +=
 		ref new TypedEventHandler<CoreWindow^, KeyEventArgs^>(this, &App::OnKeyUp);
-		*/
 
 	MouseDevice::GetForCurrentView()->MouseMoved +=
 		ref new TypedEventHandler<MouseDevice^, MouseEventArgs^>(this, &App::OnMouseMoved);
@@ -156,16 +155,6 @@ void App::OnKeyDown(
 	_In_ KeyEventArgs^ args
 	)
 {
-
-	ImGuiIO& io = ImGui::GetIO();
-
-
-	/*
-	if ((size_t)args->VirtualKey<256)
-		io.KeysDown[(size_t)args->VirtualKey] = true;
-	*/
-
-
 
 	if (m_tracking)
 		s_Keybuffer[kb_map[(size_t)args->VirtualKey]] = 128;
@@ -294,12 +283,6 @@ void App::OnKeyUp(
 
 	if (m_tracking)
 		s_Keybuffer[kb_map[(size_t)args->VirtualKey]] = 0;
-
-	ImGuiIO& io = ImGui::GetIO();
-
-	//if ((size_t)args->VirtualKey<256)
-		//io.KeysDown[(size_t)(args->VirtualKey)] = 0;
-
 }
 
 

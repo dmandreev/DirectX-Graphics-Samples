@@ -160,5 +160,10 @@ private:
 
 	Texture m_imguiFontTexture;
 
+	char shader_text[1024*1024] = "";
+
+	ComPtr<ID3DBlob> dynamic_shader_ps_blob;
+	ComPtr<ID3DBlob> dynamic_shader_ps_blob_old;
+
 
 };

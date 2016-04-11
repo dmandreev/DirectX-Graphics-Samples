@@ -7,8 +7,11 @@
 #include "imconfig.h"
 #include "imgui.h"
 #include "imgui_internal.h"
+#include <ppltasks.h>
+#include <d3dcompiler.h>
 
 
+using namespace Concurrency;
 
 namespace Graphics
 {
@@ -26,9 +29,87 @@ NumVar ShadowDimZ("Application/Shadow Dim Z", 3000, 1000, 10000, 100);
 
 
 
+
+
+class 
+	CIncludeHandler : public ID3DInclude
+{
+
+public:
+	CIncludeHandler()
+	{
+
+	}
+
+	IFACEMETHODIMP Open(THIS_ D3D_INCLUDE_TYPE IncludeType, LPCSTR pFileName, LPCVOID pParentData, LPCVOID *ppData, UINT *pBytes) override
+	{
+
+		std::string fname(pFileName);
+
+		static char shader_text[1024 * 1024];
+
+		std::string fullname = "Shaders/" + fname;
+
+
+		FILE *file = nullptr;
+		if (0 != fopen_s(&file, fullname.c_str(), "rb"))
+		{
+			//error
+		}
+		else
+		{
+			fseek(file, 0L, SEEK_END);
+			auto sz = ftell(file);
+
+
+			memset(shader_text, 0, ARRAYSIZE(shader_text));
+			assert(ARRAYSIZE(shader_text) > sz);
+
+			fseek(file, 0L, SEEK_SET);
+			auto readed = fread(shader_text, sz, 1, file);
+
+			auto err = ferror(file);
+
+
+			assert(sz == readed*sz);
+
+			include_text = std::string(shader_text);
+
+			*ppData = include_text.c_str();
+			*pBytes = include_text.length();
+
+
+			fclose(file);
+			return S_OK;
+		}
+
+		return E_NOTIMPL;
+	}
+
+	IFACEMETHODIMP Close(THIS_ LPCVOID pData) override
+	{
+		return S_OK;
+	}
+
+	std::string include_text;
+};
+
+
 void GameEngineImpl::Update(float deltaT)
 {
 	ScopedTimer _prof(L"Update State");
+
+	if (dynamic_shader_ps_blob != dynamic_shader_ps_blob_old)
+	{
+
+		if (dynamic_shader_ps_blob != nullptr)
+		{
+			m_ModelPSO.SetPixelShader(dynamic_shader_ps_blob->GetBufferPointer(), dynamic_shader_ps_blob->GetBufferSize());
+			m_ModelPSO.Finalize();
+		}
+		dynamic_shader_ps_blob_old = dynamic_shader_ps_blob;
+
+	}
 
 	auto window = Windows::UI::Core::CoreWindow::GetForCurrentThread();
 
@@ -50,38 +131,6 @@ void GameEngineImpl::Update(float deltaT)
 
 	io.MouseDown[0] = pointerPressed;
 
-
-	//Windows::ApplicationModel::DataTransfer::Clipboard::
-
-	/*
-	for (int i = 0; i < 255; i++)
-	{
-		auto keyState = window->GetKeyState(Windows::System::VirtualKey(i));
-		io.KeysDown[i] = Windows::UI::Core::CoreVirtualKeyStates::Down == keyState;
-
-	};
-	*/
-
-
-	void * addr = &io.KeysDown;
-
-	void * addr1 = &io.KeysDown[VK_ESCAPE];
-
-
-
-	//	window->GetKeyState(Windows::System::VirtualKey(Windows::System::VirtualKey::Control))
-
-		//;
-
-	//io.KeyShift = Windows::UI::Core::CoreVirtualKeyStates::Down == 
-		//window->GetKeyState(Windows::System::VirtualKey(Windows::System::VirtualKey::Shift))
-		//;
-
-
-
-
-	//keyst = window->GetKeyState(Windows::System::VirtualKey(Windows::System::VirtualKey::LeftShift));
-	//keyst = window->GetKeyState(Windows::System::VirtualKey(Windows::System::VirtualKey::RightShift));
 
 
 	static bool init = true;
@@ -136,21 +185,22 @@ void GameEngineImpl::Update(float deltaT)
 	ImGui::NewFrame();
 
 	static bool showUI = true;
-	static bool free = true;
+
+	static bool fr = true;
 
 	//messy, but works
 	if (io.KeysDown[VK_ESCAPE])
 	{
-		if (free)
+		if (fr)
 		{
 			showUI = !showUI;
-			free = false;
+			fr = false;
 		}
 	}
 
-	if (!free)
+	if (!fr)
 	{
-		free = io.KeysDown[VK_ESCAPE] == false;
+		fr = io.KeysDown[VK_ESCAPE] == false;
 	}
 
 	if (showUI)
@@ -167,14 +217,107 @@ void GameEngineImpl::Update(float deltaT)
 
 	if (showUI)
 	{
-		ImGui::SetNextWindowSize(ImVec2(200, 100), ImGuiSetCond_FirstUseEver);
-		ImGui::Begin("Another Window", &show_test_window);
+		ImGui::SetNextWindowSize(ImVec2(26 * 40, 26 * 16), ImGuiSetCond_FirstUseEver);
+		ImGui::SetNextWindowPosCenter(ImGuiSetCond_FirstUseEver);
+
+
+
+		ImGui::Begin("Editor Window", &show_test_window, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse);
+
+
+
+		static char text[1024 * 1024] =
+			"/*\n"
+			" The Pentium F00F bug, shorthand for F0 0F C7 C8,\n"
+			" the hexadecimal encoding of one offending instruction,\n"
+			" more formally, the invalid operand with locked CMPXCHG8B\n"
+			" instruction bug, is a design flaw in the majority of\n"
+			" Intel Pentium, Pentium MMX, and Pentium OverDrive\n"
+			" processors (all in the P5 microarchitecture).\n"
+			"*/\n\n"
+			"label:\n"
+			"\tlock cmpxchg8b eax\n";
+
+
+		std::string shadertexttemp(shader_text);
+		ImGui::InputTextMultiline("##source", shader_text, ARRAYSIZE(shader_text), ImVec2(-1, -1), ImGuiInputTextFlags_AllowTabInput);
+
+		auto cmp = memcmp(shadertexttemp.c_str(), shader_text, shadertexttemp.length() + 1);
+		static float duration = 0;
+
+		static bool running = false;
+
+		
+		if (running == false)
+		{
+			if (cmp != 0)
+			{
+				running = true;
+				std::string txt(shader_text);
+				duration = 0;
+				auto t = create_task([this, txt]()-> int
+				{
+					//int q = txt.size();
+					//concurrency::wait(1000);
+
+
+
+					ComPtr<ID3DBlob> errors;
+
+					D3D_SHADER_MACRO Shader_Macros[2] = { { "SOMEMACRO", "1" },
+					{ nullptr,nullptr }
+					};
+
+					CIncludeHandler include_handler;
+
+					HRESULT hr = D3DCompile(txt.c_str(), txt.length() + 1, "ps.hlsl", Shader_Macros, &include_handler, "main", "ps_5_0", //"ps_5_0" "ps_3_0", 
+#ifdef _DEBUG
+						D3DCOMPILE_DEBUG
+						//D3DCOMPILE_OPTIMIZATION_LEVEL2 | D3DCOMPILE_SKIP_VALIDATION | D3DCOMPILE_SKIP_OPTIMIZATION
+#else
+																											//D3DCOMPILE_OPTIMIZATION_LEVEL3
+						D3DCOMPILE_OPTIMIZATION_LEVEL2 | D3DCOMPILE_SKIP_VALIDATION //| D3DCOMPILE_SKIP_OPTIMIZATION
+#endif
+						, 0, &dynamic_shader_ps_blob, &errors);
+
+					if (hr != S_OK)
+					{
+						size_t arr_err_size = errors->GetBufferSize();
+
+
+						char *msg = (char *)errors->GetBufferPointer();
+
+
+						char *ptr = new char[arr_err_size + sizeof(char)];
+
+						memcpy(ptr, msg, arr_err_size);
+
+						//TODO:redundant?
+						ptr[arr_err_size + 1] = 0;
+					}
 
 
 
 
 
-		ImGui::Text("Hello");
+					running = false;
+					return 10;
+					});
+				}
+			}
+		else
+		{
+			duration = duration + io.DeltaTime;
+
+			ImGui::Begin("dur");
+			ImGui::Text("duration %f", duration);
+			ImGui::End();
+		}
+
+			int q = 15;
+
+		//ImGui::InputTextMultiline("##source", text, ARRAYSIZE(text), ImVec2(-1, -1), ImGuiInputTextFlags_AllowTabInput);
+
 		ImGui::End();
 	}
 
@@ -1000,6 +1143,39 @@ void GameEngineImpl::Startup(void)
 
 
 
+	//load shader text
+	FILE *file = nullptr;
+	if (0 != fopen_s(&file, "Shaders/ps.hlsl", "rb"))
+	{
+		//error
+	}
+	else
+	{
+		fseek(file, 0L, SEEK_END);
+		auto sz = ftell(file);
+
+		//TODO:_align_free
+
+		memset(shader_text, 0, ARRAYSIZE(shader_text));
+		assert(ARRAYSIZE(shader_text) > sz);
+
+		fseek(file, 0L, SEEK_SET);
+		auto readed=fread(shader_text, sz, 1, file);
+
+		auto err=ferror(file);
+
+
+		assert(sz == readed*sz);
+
+		shader_text[sz] = 0;
+
+		fclose(file);
+	}
+
+
+	//--end load shader text
+
+	bool ok = false;
 
 	ASSERT(m_Model.Load("Models/sponza.h3d"), "Failed to load model");
 	ASSERT(m_Model.m_Header.meshCount > 0, "Model contains no meshes");

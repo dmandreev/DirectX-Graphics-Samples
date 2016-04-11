@@ -211,11 +211,11 @@
     <None Include="Models\sponza.h3d">
       <Filter>Resource Files</Filter>
     </None>
-    <None Include="Shaders\ModelViewerRS.hlsli">
-      <Filter>Shaders</Filter>
-    </None>
     <None Include="ShaderPad_VS14_UWP_TemporaryKey.pfx" />
     <None Include="Shaders\Imgui.hlsli">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="Shaders\ModelViewerRS.hlsli">
       <Filter>Shaders</Filter>
     </None>
   </ItemGroup>
@@ -299,5 +299,8 @@
     <Font Include="Assets\consolab.ttf" />
     <Font Include="Assets\consolai.ttf" />
     <Font Include="Assets\consolaz.ttf" />
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="Shaders\ps.hlsl" />
   </ItemGroup>
 </Project>

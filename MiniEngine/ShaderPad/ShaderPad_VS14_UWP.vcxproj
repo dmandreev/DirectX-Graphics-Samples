@@ -118,6 +118,7 @@
     <AppxAutoIncrementPackageRevision>True</AppxAutoIncrementPackageRevision>
     <AppxBundle>Always</AppxBundle>
     <AppxBundlePlatforms>x86</AppxBundlePlatforms>
+    <AppxPackageDir>C:\Devel\dmandreev\DirectX-Graphics-Samples\MiniEngine\ShaderPad\AppPackages\ShaderPad_VS14_UWP\ShaderPad_VS14_UWP_1.0.6.0_Debug_Test\</AppxPackageDir>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
     <Link>
@@ -336,7 +337,14 @@
     </None>
     <None Include="ShaderPad_VS14_UWP_TemporaryKey.pfx" />
     <None Include="Shaders\Imgui.hlsli" />
-    <None Include="Shaders\ModelViewerRS.hlsli" />
+    <None Include="Shaders\ModelViewerRS.hlsli">
+      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</DeploymentContent>
+      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</DeploymentContent>
+      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">true</DeploymentContent>
+      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">true</DeploymentContent>
+      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</DeploymentContent>
+      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</DeploymentContent>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Shaders\DepthViewerPS.hlsl">
@@ -356,12 +364,17 @@
     </FxCompile>
     <FxCompile Include="Shaders\ModelViewerPS.hlsl">
       <ShaderType>Pixel</ShaderType>
+      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</DeploymentContent>
     </FxCompile>
     <FxCompile Include="Shaders\ModelViewerVS.hlsl">
       <ShaderType>Vertex</ShaderType>
       <DisableOptimizations Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</DisableOptimizations>
       <DisableOptimizations Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</DisableOptimizations>
     </FxCompile>
+    <Text Include="Shaders\ps.hlsl">
+      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</DeploymentContent>
+      <FileType>Document</FileType>
+    </Text>
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\3rdParty\zlib\ZLib_VS14UWP.vcxproj">
