@@ -220,9 +220,6 @@ void App::OnCharacterReceived(
 		args->KeyStatus.ScanCode,
 		args->KeyStatus.WasKeyDown
 		);
-
-
-	int q = 15;
 }
 
 

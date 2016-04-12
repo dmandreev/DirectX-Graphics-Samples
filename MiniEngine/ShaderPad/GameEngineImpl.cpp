@@ -243,7 +243,7 @@ void GameEngineImpl::Update(float deltaT)
 
 	if (showUI)
 	{
-		ImGui::ShowTestWindow();
+		//ImGui::ShowTestWindow();
 	}
 	
 
