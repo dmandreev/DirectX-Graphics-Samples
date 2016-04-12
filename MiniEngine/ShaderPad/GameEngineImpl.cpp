@@ -172,6 +172,7 @@ void GameEngineImpl::Update(float deltaT)
 
 
 
+	//TODO:has focus test???
 	for (size_t i = 0; i< 256; i++)
 	{
 		DWORD new_keystate = (DWORD)window->GetKeyState(Windows::System::VirtualKey(i));
@@ -210,6 +211,7 @@ void GameEngineImpl::Update(float deltaT)
 	static bool showUI = true;
 
 	static bool fr = true;
+	static bool editorHasFocus = false;
 
 	//messy, but works
 	if (io.KeysDown[VK_ESCAPE])
@@ -217,6 +219,8 @@ void GameEngineImpl::Update(float deltaT)
 		if (fr)
 		{
 			showUI = !showUI;
+			if (showUI)
+				editorHasFocus = false;
 			fr = false;
 		}
 	}
@@ -249,14 +253,15 @@ void GameEngineImpl::Update(float deltaT)
 
 	static bool showEditor = true;
 
+
 	if (showUI)
 	{
 		auto style = ImGui::GetStyle();
 
-		auto sz = (fontSize * 24) + style.WindowPadding.y*2;
+		auto sz = (fontSize * 24) + style.WindowPadding.y * 2;
 
 		ImGui::SetNextWindowSize(ImVec2(fontSize * 60, sz), ImGuiSetCond_FirstUseEver);
-		ImGui::SetNextWindowPos(ImVec2(100,100), ImGuiSetCond_FirstUseEver);
+		ImGui::SetNextWindowPos(ImVec2(100, 100), ImGuiSetCond_FirstUseEver);
 
 
 
@@ -274,6 +279,15 @@ void GameEngineImpl::Update(float deltaT)
 
 
 		std::string shadertexttemp(shader_text);
+
+
+
+		if (!editorHasFocus)
+		{
+			ImGui::SetKeyboardFocusHere();
+			editorHasFocus = true;
+		}
+
 		ImGui::InputTextMultiline("##source", shader_text, ARRAYSIZE(shader_text), ImVec2(-1, -1), ImGuiInputTextFlags_AllowTabInput);
 
 		auto cmp = memcmp(shadertexttemp.c_str(), shader_text, shadertexttemp.length() + 1);
@@ -1099,6 +1113,7 @@ void GameEngineImpl::Startup(void)
     io.KeyMap[ImGuiKey_Backspace] = VK_BACK;
     io.KeyMap[ImGuiKey_Enter] = VK_RETURN;
     io.KeyMap[ImGuiKey_Escape] = VK_ESCAPE;
+	io.KeyMap[ImGuiKey_Insert] = VK_INSERT;
 	io.KeyMap[ImGuiKey_A] = 'A';
 	io.KeyMap[ImGuiKey_C] = 'C';
 	io.KeyMap[ImGuiKey_V] = 'V';

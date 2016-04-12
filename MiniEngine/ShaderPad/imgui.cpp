@@ -7533,7 +7533,13 @@ bool ImGui::InputTextEx(const char* label, char* buf, int buf_size, const ImVec2
         else if (is_ctrl_only && IsKeyPressedMap(ImGuiKey_Z) && is_editable)    { edit_state.OnKeyPressed(STB_TEXTEDIT_K_UNDO); edit_state.ClearSelection(); }
         else if (is_ctrl_only && IsKeyPressedMap(ImGuiKey_Y) && is_editable)    { edit_state.OnKeyPressed(STB_TEXTEDIT_K_REDO); edit_state.ClearSelection(); }
         else if (is_ctrl_only && IsKeyPressedMap(ImGuiKey_A))                   { edit_state.SelectAll(); edit_state.CursorFollow = true; }
-        else if (is_ctrl_only && !is_password && ((IsKeyPressedMap(ImGuiKey_X) && is_editable) || IsKeyPressedMap(ImGuiKey_C)) && (!is_multiline || edit_state.HasSelection()))
+        else if (is_ctrl_only && !is_password && 
+			((IsKeyPressedMap(ImGuiKey_X) && is_editable) 
+			|| IsKeyPressedMap(ImGuiKey_C)) && (!is_multiline || edit_state.HasSelection())
+			
+			|| (is_ctrl_down && !is_alt_down && !is_shift_down && IsKeyPressedMap(ImGuiKey_Insert) && is_editable)
+			
+			)
         {
             // Cut, Copy
             const bool cut = IsKeyPressedMap(ImGuiKey_X);
@@ -7555,7 +7561,9 @@ bool ImGui::InputTextEx(const char* label, char* buf, int buf_size, const ImVec2
                 stb_textedit_cut(&edit_state, &edit_state.StbState);
             }
         }
-        else if (is_ctrl_only && IsKeyPressedMap(ImGuiKey_V) && is_editable)
+        else if (is_ctrl_only && IsKeyPressedMap(ImGuiKey_V) && is_editable 
+			||(!is_ctrl_down && !is_alt_down && is_shift_down && IsKeyPressedMap(ImGuiKey_Insert))
+			)
         {
             // Paste
             if (g.IO.GetClipboardTextFn)

@@ -518,6 +518,7 @@ enum ImGuiKey_
     ImGuiKey_DownArrow, // for text edit
     ImGuiKey_PageUp,
     ImGuiKey_PageDown,
+	ImGuiKey_Insert,
     ImGuiKey_Home,      // for text edit
     ImGuiKey_End,       // for text edit
     ImGuiKey_Delete,    // for text edit
