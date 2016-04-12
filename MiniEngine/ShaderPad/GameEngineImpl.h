@@ -147,6 +147,8 @@ private:
 
 	D3D12_CPU_DESCRIPTOR_HANDLE m_ExtraTextures[2];
 
+	D3D12_CPU_DESCRIPTOR_HANDLE m_dummyTextures[6];
+
 	Model m_Model;
 
 	Vector3 m_SunDirection;

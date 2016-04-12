@@ -141,6 +141,7 @@ float3 main(VSOutput vsOutput) : SV_Target0
 	float ao = texSSAO[uint2(vsOutput.position.xy)];
 	float3 viewDir = normalize(vsOutput.viewDir);
 
+
 	AntiAliasSpecular(normal, gloss);
 
 	float3x3 tbn = float3x3(normalize(vsOutput.tangent), normalize(vsOutput.bitangent), normalize(vsOutput.normal));
