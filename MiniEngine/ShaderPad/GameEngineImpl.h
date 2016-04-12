@@ -159,6 +159,9 @@ private:
 	StructuredBuffer imguiVertexBuffer;
 	ByteAddressBuffer imguiIndexBuffer;
 
+	StructuredBuffer manualVertexBuffer;
+	ByteAddressBuffer manualIndexBuffer;
+
 
 	Texture m_imguiFontTexture;
 

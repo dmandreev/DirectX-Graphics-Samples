@@ -97,7 +97,10 @@ namespace Graphics
 	const uint32_t kNumPredefinedResolutions = 5;
 
 	const char* ResolutionLabels[] = { "1280x720", "1600x900", "1920x1080", "2560x1440", "3840x2160" };
-	EnumVar TargetResolution("Graphics/Display/Native Resolution", k1080p, kNumPredefinedResolutions, ResolutionLabels);
+	EnumVar TargetResolution("Graphics/Display/Native Resolution", 
+		k1080p,
+		//k720p,
+		kNumPredefinedResolutions, ResolutionLabels);
 
 	uint32_t g_NativeWidth = 1920;
 	uint32_t g_NativeHeight = 1080;

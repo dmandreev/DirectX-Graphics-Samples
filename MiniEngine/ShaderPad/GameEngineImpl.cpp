@@ -28,6 +28,28 @@ NumVar ShadowDimY("Application/Shadow Dim Y", 3000, 1000, 10000, 100);
 NumVar ShadowDimZ("Application/Shadow Dim Z", 3000, 1000, 10000, 100);
 
 
+struct float2
+{
+	float x;
+	float y;
+};
+struct float3
+{
+	float x;
+	float y;
+	float z;
+};
+
+
+struct VSInput
+{
+	float3 position;
+	float2 texcoord0;
+	float3 normal;
+	float3 tangent;
+	float3 bitangent;
+};
+
 
 
 
@@ -512,6 +534,60 @@ void GameEngineImpl::RenderObjects(GraphicsContext& gfxContext, const Matrix4& V
 		gfxContext.DrawIndexed(indexCount, startIndex);
 #endif
 	}
+/*
+	struct VSInput
+	{
+		float3 position;
+		float2 texcoord0;
+		float3 normal;
+		float3 tangent;
+		float3 bitangent;
+	};
+*/
+	__declspec(align(16))
+	  VSInput input[3] = {
+		{
+			{0,0,0}, // position
+			{0.5f,0.5f}, //texcoord0
+			{ 0,0,0 }, // normal
+			{ 0,0,0 }, // tangent
+			{ 0,0,0 }, // bitangent
+		},
+		{
+			{ 0,10,0 }, // position
+			{ 0.5f,0.5f }, //texcoord0
+			{ 0,0,0 }, // normal
+			{ 0,0,0 }, // tangent
+			{ 0,0,0 }, // bitangent
+		}
+		,
+		{
+			{ 10,10,0 }, // position
+			{ 0.5f,0.5f }, //texcoord0
+			{ 0,0,0 }, // normal
+			{ 0,0,0 }, // tangent
+			{ 0,0,0 }, // bitangent
+		}
+	};
+
+	__declspec(align(16)) unsigned short idxbuf[3] = { 0,1,2 };
+
+	gfxContext.SetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	gfxContext.WriteBuffer(manualVertexBuffer, 0, &input, _ARRAYSIZE(input)*sizeof(VSInput));
+	gfxContext.WriteBuffer(manualIndexBuffer, 0, &idxbuf, _ARRAYSIZE(idxbuf)*sizeof(unsigned short));
+
+
+	gfxContext.SetDynamicDescriptor(2, 0, manualVertexBuffer.GetSRV());
+
+	gfxContext.SetIndexBuffer(manualIndexBuffer.IndexBufferView());
+
+
+	gfxContext.SetConstants(5, 0);
+	gfxContext.DrawIndexed(3, 0);
+
+	gfxContext.SetIndexBuffer(m_Model.m_IndexBuffer.IndexBufferView());
+	gfxContext.SetDynamicDescriptor(2, 0, m_Model.m_VertexBuffer.GetSRV());
+
 }
 
 
@@ -1090,6 +1166,14 @@ void GameEngineImpl::Startup(void)
 
 	imguiVertexBuffer.Create(L"imguiVertexBuffer", UINT16_MAX, sizeof(ImDrawVert), nullptr);
 	imguiIndexBuffer.Create(L"imguiIndexBuffer", UINT16_MAX, sizeof(ImDrawIdx), nullptr);
+
+
+
+
+	auto size_of_vsinput = sizeof(VSInput);
+
+	manualVertexBuffer.Create(L"manualVertexBuffer", UINT16_MAX, size_of_vsinput, nullptr);
+	manualIndexBuffer.Create(L"manualIndexBuffer", UINT16_MAX, sizeof(unsigned short), nullptr);
 
 
 	ImGuiIO& io = ImGui::GetIO();
