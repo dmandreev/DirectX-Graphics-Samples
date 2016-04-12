@@ -7398,75 +7398,112 @@ bool ImGui::InputTextEx(const char* label, char* buf, int buf_size, const ImVec2
     bool value_changed = false;
     bool enter_pressed = false;
 
-    if (g.ActiveId == id)
-    {
-        if (!is_editable && !g.ActiveIdIsJustActivated)
-        {
-            // When read-only we always use the live data passed to the function
-            edit_state.Text.resize(buf_size+1);
-            const char* buf_end = NULL;
-            edit_state.CurLenW = ImTextStrFromUtf8(edit_state.Text.Data, edit_state.Text.Size, buf, NULL, &buf_end);
-            edit_state.CurLenA = (int)(buf_end - buf);
-            edit_state.CursorClamp();
-        }
+	if (g.ActiveId == id)
+	{
+		if (!is_editable && !g.ActiveIdIsJustActivated)
+		{
+			// When read-only we always use the live data passed to the function
+			edit_state.Text.resize(buf_size + 1);
+			const char* buf_end = NULL;
+			edit_state.CurLenW = ImTextStrFromUtf8(edit_state.Text.Data, edit_state.Text.Size, buf, NULL, &buf_end);
+			edit_state.CurLenA = (int)(buf_end - buf);
+			edit_state.CursorClamp();
+		}
 
-        edit_state.BufSizeA = buf_size;
+		edit_state.BufSizeA = buf_size;
 
-        // Although we are active we don't prevent mouse from hovering other elements unless we are interacting right now with the widget.
-        // Down the line we should have a cleaner library-wide concept of Selected vs Active.
-        g.ActiveIdAllowOverlap = !io.MouseDown[0];
+		// Although we are active we don't prevent mouse from hovering other elements unless we are interacting right now with the widget.
+		// Down the line we should have a cleaner library-wide concept of Selected vs Active.
+		g.ActiveIdAllowOverlap = !io.MouseDown[0];
 
-        // Edit in progress
-        const float mouse_x = (g.IO.MousePos.x - frame_bb.Min.x - style.FramePadding.x) + edit_state.ScrollX;
-        const float mouse_y = (is_multiline ? (g.IO.MousePos.y - draw_window->DC.CursorPos.y - style.FramePadding.y) : (g.FontSize*0.5f));
+		// Edit in progress
+		const float mouse_x = (g.IO.MousePos.x - frame_bb.Min.x - style.FramePadding.x) + edit_state.ScrollX;
+		const float mouse_y = (is_multiline ? (g.IO.MousePos.y - draw_window->DC.CursorPos.y - style.FramePadding.y) : (g.FontSize*0.5f));
 
-        if (select_all || (hovered && io.MouseDoubleClicked[0]))
-        {
-            edit_state.SelectAll();
-            edit_state.SelectedAllMouseLock = true;
-        }
-        else if (io.MouseClicked[0] && !edit_state.SelectedAllMouseLock)
-        {
-            stb_textedit_click(&edit_state, &edit_state.StbState, mouse_x, mouse_y);
-            edit_state.CursorAnimReset();
-        }
-        else if (io.MouseDown[0] && !edit_state.SelectedAllMouseLock && (io.MouseDelta.x != 0.0f || io.MouseDelta.y != 0.0f))
-        {
-            stb_textedit_drag(&edit_state, &edit_state.StbState, mouse_x, mouse_y);
-            edit_state.CursorAnimReset();
-            edit_state.CursorFollow = true;
-        }
-        if (edit_state.SelectedAllMouseLock && !io.MouseDown[0])
-            edit_state.SelectedAllMouseLock = false;
+		if (select_all || (hovered && io.MouseDoubleClicked[0]))
+		{
+			edit_state.SelectAll();
+			edit_state.SelectedAllMouseLock = true;
+		}
+		else if (io.MouseClicked[0] && !edit_state.SelectedAllMouseLock)
+		{
+			stb_textedit_click(&edit_state, &edit_state.StbState, mouse_x, mouse_y);
+			edit_state.CursorAnimReset();
+		}
+		else if (io.MouseDown[0] && !edit_state.SelectedAllMouseLock && (io.MouseDelta.x != 0.0f || io.MouseDelta.y != 0.0f))
+		{
+			stb_textedit_drag(&edit_state, &edit_state.StbState, mouse_x, mouse_y);
+			edit_state.CursorAnimReset();
+			edit_state.CursorFollow = true;
+		}
+		if (edit_state.SelectedAllMouseLock && !io.MouseDown[0])
+			edit_state.SelectedAllMouseLock = false;
 
-        if (g.IO.InputCharacters[0])
-        {
-            // Process text input (before we check for Return because using some IME will effectively send a Return?)
-            // We ignore CTRL inputs, but need to allow CTRL+ALT as some keyboards (e.g. German) use AltGR - which is Alt+Ctrl - to input certain characters.
-            if (!(is_ctrl_down && !is_alt_down) && is_editable)
-            {
-                for (int n = 0; n < IM_ARRAYSIZE(g.IO.InputCharacters) && g.IO.InputCharacters[n]; n++)
-                    if (unsigned int c = (unsigned int)g.IO.InputCharacters[n])
-                    {
-                        // Insert character if they pass filtering
-                        if (!InputTextFilterCharacter(&c, flags, callback, user_data))
-                            continue;
-                        edit_state.OnKeyPressed((int)c);
-                    }
-            }
+		if (g.IO.InputCharacters[0])
+		{
+			// Process text input (before we check for Return because using some IME will effectively send a Return?)
+			// We ignore CTRL inputs, but need to allow CTRL+ALT as some keyboards (e.g. German) use AltGR - which is Alt+Ctrl - to input certain characters.
+			if (!(is_ctrl_down && !is_alt_down) && is_editable)
+			{
+				for (int n = 0; n < IM_ARRAYSIZE(g.IO.InputCharacters) && g.IO.InputCharacters[n]; n++)
+					if (unsigned int c = (unsigned int)g.IO.InputCharacters[n])
+					{
+						// Insert character if they pass filtering
+						if (!InputTextFilterCharacter(&c, flags, callback, user_data))
+							continue;
+						edit_state.OnKeyPressed((int)c);
+					}
+			}
 
-            // Consume characters
-            memset(g.IO.InputCharacters, 0, sizeof(g.IO.InputCharacters));
-        }
+			// Consume characters
+			memset(g.IO.InputCharacters, 0, sizeof(g.IO.InputCharacters));
+		}
 
-        // Handle various key-presses
-        bool cancel_edit = false;
-        const int k_mask = (is_shift_down ? STB_TEXTEDIT_K_SHIFT : 0);
-        const bool is_ctrl_only = is_ctrl_down && !is_alt_down && !is_shift_down;
-        if (IsKeyPressedMap(ImGuiKey_LeftArrow))                        { edit_state.OnKeyPressed(is_ctrl_down ? STB_TEXTEDIT_K_WORDLEFT | k_mask : STB_TEXTEDIT_K_LEFT | k_mask); }
-        else if (IsKeyPressedMap(ImGuiKey_RightArrow))                  { edit_state.OnKeyPressed(is_ctrl_down ? STB_TEXTEDIT_K_WORDRIGHT | k_mask  : STB_TEXTEDIT_K_RIGHT | k_mask); }
-        else if (is_multiline && IsKeyPressedMap(ImGuiKey_UpArrow))     { if (is_ctrl_down) SetWindowScrollY(draw_window, draw_window->Scroll.y - g.FontSize); else edit_state.OnKeyPressed(STB_TEXTEDIT_K_UP | k_mask); }
-        else if (is_multiline && IsKeyPressedMap(ImGuiKey_DownArrow))   { if (is_ctrl_down) SetWindowScrollY(draw_window, draw_window->Scroll.y + g.FontSize); else edit_state.OnKeyPressed(STB_TEXTEDIT_K_DOWN| k_mask); }
+		// Handle various key-presses
+		bool cancel_edit = false;
+		const int k_mask = (is_shift_down ? STB_TEXTEDIT_K_SHIFT : 0);
+		const bool is_ctrl_only = is_ctrl_down && !is_alt_down && !is_shift_down;
+		if (IsKeyPressedMap(ImGuiKey_LeftArrow)) { edit_state.OnKeyPressed(is_ctrl_down ? STB_TEXTEDIT_K_WORDLEFT | k_mask : STB_TEXTEDIT_K_LEFT | k_mask); }
+		else if (IsKeyPressedMap(ImGuiKey_RightArrow)) { edit_state.OnKeyPressed(is_ctrl_down ? STB_TEXTEDIT_K_WORDRIGHT | k_mask : STB_TEXTEDIT_K_RIGHT | k_mask); }
+		else if (is_multiline && IsKeyPressedMap(ImGuiKey_UpArrow)) { if (is_ctrl_down) SetWindowScrollY(draw_window, draw_window->Scroll.y - g.FontSize); else edit_state.OnKeyPressed(STB_TEXTEDIT_K_UP | k_mask); }
+		else if (is_multiline && IsKeyPressedMap(ImGuiKey_DownArrow))
+		{
+			if (is_ctrl_down) SetWindowScrollY(draw_window, draw_window->Scroll.y + g.FontSize);
+				else edit_state.OnKeyPressed(STB_TEXTEDIT_K_DOWN | k_mask);
+		}
+		else if (is_multiline && IsKeyPressedMap(ImGuiKey_PageDown))
+		{
+			auto height = GetWindowHeight();
+			auto fontSize = GetWindowFontSize();
+
+
+			auto pagecnt = round(height / fontSize);
+
+
+
+			SetWindowScrollY(draw_window, draw_window->Scroll.y + pagecnt*g.FontSize);
+
+			for (int i = 0; i < pagecnt;i++)
+				edit_state.OnKeyPressed(STB_TEXTEDIT_K_DOWN );
+
+		}
+		else if (is_multiline && IsKeyPressedMap(ImGuiKey_PageUp))
+		{
+			auto height = GetWindowHeight();
+			auto fontSize = GetWindowFontSize();
+
+
+			auto pagecnt = round(height / fontSize);
+
+
+			SetWindowScrollY(draw_window, draw_window->Scroll.y - pagecnt*g.FontSize);
+
+			for (int i = 0; i < pagecnt; i++)
+				edit_state.OnKeyPressed(STB_TEXTEDIT_K_UP);
+
+
+		}
+
         else if (IsKeyPressedMap(ImGuiKey_Home))                        { edit_state.OnKeyPressed(is_ctrl_down ? STB_TEXTEDIT_K_TEXTSTART | k_mask : STB_TEXTEDIT_K_LINESTART | k_mask); }
         else if (IsKeyPressedMap(ImGuiKey_End))                         { edit_state.OnKeyPressed(is_ctrl_down ? STB_TEXTEDIT_K_TEXTEND | k_mask : STB_TEXTEDIT_K_LINEEND | k_mask); }
         else if (IsKeyPressedMap(ImGuiKey_Delete) && is_editable)       { edit_state.OnKeyPressed(STB_TEXTEDIT_K_DELETE | k_mask); }

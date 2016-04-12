@@ -221,6 +221,17 @@ void GameEngineImpl::Update(float deltaT)
 		}
 	}
 
+
+	//GImGui->Style.WindowPadding.x;
+	//GImGui->Style.WindowPadding.y;
+
+	GImGui->Style.FrameRounding = 0;
+	GImGui->Style.WindowRounding = 0;
+	GImGui->Style.ScrollbarRounding = 0;
+	GImGui->Style.ScrollbarSize = 24;
+	
+	//ImGuiStyle::ImGuiStyle::WindowPadding = ImVec2(0, 0);
+
 	if (!fr)
 	{
 		fr = io.KeysDown[VK_ESCAPE] == false;
@@ -234,14 +245,18 @@ void GameEngineImpl::Update(float deltaT)
 
 
 
-	static bool show_test_window = true;
+	//static bool show_test_window = true;
 
-
+	static bool showEditor = true;
 
 	if (showUI)
 	{
-		ImGui::SetNextWindowSize(ImVec2(fontSize * 40, fontSize * 24), ImGuiSetCond_FirstUseEver);
-		ImGui::SetNextWindowPosCenter(ImGuiSetCond_FirstUseEver);
+		auto style = ImGui::GetStyle();
+
+		auto sz = (fontSize * 24) + style.WindowPadding.y*2;
+
+		ImGui::SetNextWindowSize(ImVec2(fontSize * 60, sz), ImGuiSetCond_FirstUseEver);
+		ImGui::SetNextWindowPos(ImVec2(100,100), ImGuiSetCond_FirstUseEver);
 
 
 
@@ -250,22 +265,12 @@ void GameEngineImpl::Update(float deltaT)
 			//Read code in imgui_demo in the "Horizontal Scrolling" section.
 
 
-		ImGui::Begin("Editor Window", &show_test_window, ImGuiWindowFlags_NoTitleBar
+
+		ImGui::Begin("Editor Window", &showEditor, ImGuiWindowFlags_NoTitleBar
 			);
 
 
 
-		static char text[1024 * 1024] =
-			"/*\n"
-			" The Pentium F00F bug, shorthand for F0 0F C7 C8,\n"
-			" the hexadecimal encoding of one offending instruction,\n"
-			" more formally, the invalid operand with locked CMPXCHG8B\n"
-			" instruction bug, is a design flaw in the majority of\n"
-			" Intel Pentium, Pentium MMX, and Pentium OverDrive\n"
-			" processors (all in the P5 microarchitecture).\n"
-			"*/\n\n"
-			"label:\n"
-			"\tlock cmpxchg8b eax\n";
 
 
 		std::string shadertexttemp(shader_text);
@@ -368,8 +373,8 @@ void GameEngineImpl::Update(float deltaT)
 		}
 
 
-		ImGui::SetNextWindowPos(ImVec2(600,750),ImGuiSetCond_FirstUseEver);
-		ImGui::SetNextWindowSize(ImVec2(700, 200), ImGuiSetCond_FirstUseEver);
+		ImGui::SetNextWindowPos(ImVec2(100, fontSize * 24+100+24),ImGuiSetCond_FirstUseEver);
+		ImGui::SetNextWindowSize(ImVec2(fontSize *60, 200), ImGuiSetCond_FirstUseEver);
 		ImGui::Begin("Compilation results");
 		//ImGui::Text("duration %f", duration);
 		ImGui::Text("%s", last_comile_error.c_str());
@@ -879,6 +884,7 @@ void GameEngineImpl::RenderUI(class GraphicsContext& gfxContext)
 
 	io.KeyCtrl = io.KeysDown[VK_CONTROL];
 	io.KeyShift = io.KeysDown[VK_SHIFT];
+	io.KeyAlt = io.KeysDown[VK_MENU];
 
 
 
