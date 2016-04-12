@@ -1254,6 +1254,11 @@ void GameEngineImpl::Startup(void)
 		fclose(file);
 	}
 
+	string unix_style = string(shader_text);
+	FindReplace(unix_style, string("\r"), string(""));
+
+	memcpy(shader_text, unix_style.data(), unix_style.length() + 1);
+
 
 	//--end load shader text
 
