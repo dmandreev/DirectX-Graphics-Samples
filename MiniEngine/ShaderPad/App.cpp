@@ -336,12 +336,13 @@ void App::OnActivated(CoreApplicationView^ applicationView, IActivatedEventArgs^
 	if (args->Kind == ActivationKind::Launch)
 	{
 		auto launchArgs = static_cast<LaunchActivatedEventArgs^>(args);
+		/*
 		if (launchArgs->PrelaunchActivated)
 		{
 			// Opt-out of Prelaunch 
 			CoreApplication::Exit();
 			return;	
-		}
+		}*/
 	}
 
 	//CoreApplication::GetCurrentView()->TitleBar->ExtendViewIntoTitleBar = true;

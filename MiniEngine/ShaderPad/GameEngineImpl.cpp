@@ -210,18 +210,18 @@ void GameEngineImpl::Update(float deltaT)
 
 	static bool showUI = true;
 
-	static bool fr = true;
+	static bool escapehitlock = true;
 	static bool editorHasFocus = false;
 
 	//messy, but works
 	if (io.KeysDown[VK_ESCAPE])
 	{
-		if (fr)
+		if (escapehitlock)
 		{
 			showUI = !showUI;
 			if (showUI)
 				editorHasFocus = false;
-			fr = false;
+			escapehitlock = false;
 		}
 	}
 
@@ -229,16 +229,12 @@ void GameEngineImpl::Update(float deltaT)
 	//GImGui->Style.WindowPadding.x;
 	//GImGui->Style.WindowPadding.y;
 
-	GImGui->Style.FrameRounding = 0;
-	GImGui->Style.WindowRounding = 0;
-	GImGui->Style.ScrollbarRounding = 0;
-	GImGui->Style.ScrollbarSize = 24;
 	
 	//ImGuiStyle::ImGuiStyle::WindowPadding = ImVec2(0, 0);
 
-	if (!fr)
+	if (!escapehitlock)
 	{
-		fr = io.KeysDown[VK_ESCAPE] == false;
+		escapehitlock = io.KeysDown[VK_ESCAPE] == false;
 	}
 
 	if (showUI)
@@ -932,7 +928,8 @@ static const char* GetClipboardTextFn_DefaultImpl()
 
 	auto t = content->GetTextAsync();
 
-	//TODO:dangerous
+
+	//TODO:dangerous, need timer
 	auto retstr=WaitForAsync(t);
 
 	std::wstring fooW(retstr->Begin());
@@ -941,7 +938,6 @@ static const char* GetClipboardTextFn_DefaultImpl()
 	std::wstring_convert<std::codecvt_utf8<wchar_t>> utf8_conv;
 	
 	auto b=utf8_conv.to_bytes(fooW);
-
 
 
 
@@ -962,6 +958,7 @@ static void SetClipboardTextFn_DefaultImpl(const char* text)
 {
 
 	//TODO: tab 2/4 length
+	//TODO: bug bug - global keyboard focus and backgroind enter/delete???
 
 	wchar_t *buf = (wchar_t *)alloca((strlen(text) + 1)*2);
 
@@ -982,8 +979,6 @@ static void SetClipboardTextFn_DefaultImpl(const char* text)
 	dataPackage->SetText(p_string);
 
 	Windows::ApplicationModel::DataTransfer::Clipboard::SetContent(dataPackage);
-
-	int z = 15;
 }
 
 
@@ -1178,6 +1173,11 @@ void GameEngineImpl::Startup(void)
 	// use ImGui::PushFont()/ImGui::PopFont() to change the font at runtime
 
 
+	GImGui->Style.FrameRounding = 0;
+	GImGui->Style.WindowRounding = 0;
+	GImGui->Style.ScrollbarRounding = 0;
+	GImGui->Style.ScrollbarSize = 24;
+
 
 
 	m_imguiFontTexture.Create(width, height, DXGI_FORMAT_R8G8B8A8_UNORM, pixels);
@@ -1229,6 +1229,7 @@ void GameEngineImpl::Startup(void)
 	FILE *file = nullptr;
 	if (0 != fopen_s(&file, "Shaders/ps.hlsl", "rb"))
 	{
+		assert(false);
 		//error
 	}
 	else
@@ -1236,7 +1237,6 @@ void GameEngineImpl::Startup(void)
 		fseek(file, 0L, SEEK_END);
 		auto sz = ftell(file);
 
-		//TODO:_align_free
 
 		memset(shader_text, 0, ARRAYSIZE(shader_text));
 		assert(ARRAYSIZE(shader_text) > sz);
@@ -1262,7 +1262,7 @@ void GameEngineImpl::Startup(void)
 
 	//--end load shader text
 
-	bool ok = false;
+	//bool ok = false;
 
 	ASSERT(m_Model.Load("Models/sponza.h3d"), "Failed to load model");
 	ASSERT(m_Model.m_Header.meshCount > 0, "Model contains no meshes");
