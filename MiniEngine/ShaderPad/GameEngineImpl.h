@@ -147,6 +147,10 @@ private:
 
 	D3D12_CPU_DESCRIPTOR_HANDLE m_ExtraTextures[2];
 
+	const ManagedTexture* grid_texture=nullptr;
+	const ManagedTexture* default_normal_texture=nullptr;
+	const ManagedTexture* default_specular_texture = nullptr;;
+
 	D3D12_CPU_DESCRIPTOR_HANDLE m_dummyTextures[6];
 
 	Model m_Model;

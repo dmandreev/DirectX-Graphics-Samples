@@ -221,6 +221,7 @@
     <Image Include="Textures\default_normal.DDS" />
     <Image Include="Textures\default_specular.DDS" />
     <Image Include="Textures\fire.dds" />
+    <Image Include="Textures\grid.dds" />
     <Image Include="Textures\Models\background.DDS" />
     <Image Include="Textures\Models\background_normal.DDS" />
     <Image Include="Textures\Models\chain_texture.DDS" />

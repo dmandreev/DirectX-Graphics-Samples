@@ -547,23 +547,23 @@ void GameEngineImpl::RenderObjects(GraphicsContext& gfxContext, const Matrix4& V
 	__declspec(align(16))
 	  VSInput input[3] = {
 		{
-			{0,0,0}, // position
-			{0.5f,0.5f}, //texcoord0
+			{0,0,-100}, // position
+			{0,1}, //texcoord0
 			{ 0,0,0 }, // normal
 			{ 0,0,0 }, // tangent
 			{ 0,0,0 }, // bitangent
 		},
 		{
-			{ 0,10,0 }, // position
-			{ 0.5f,0.5f }, //texcoord0
+			{ 100,0,-100 }, // position
+			{ 1,1 }, //texcoord0
 			{ 0,0,0 }, // normal
 			{ 0,0,0 }, // tangent
 			{ 0,0,0 }, // bitangent
 		}
 		,
 		{
-			{ 10,10,0 }, // position
-			{ 0.5f,0.5f }, //texcoord0
+			{ 0,100,-100 }, // position
+			{ 0,0 }, //texcoord0
 			{ 0,0,0 }, // normal
 			{ 0,0,0 }, // tangent
 			{ 0,0,0 }, // bitangent
@@ -577,9 +577,21 @@ void GameEngineImpl::RenderObjects(GraphicsContext& gfxContext, const Matrix4& V
 	gfxContext.WriteBuffer(manualIndexBuffer, 0, &idxbuf, _ARRAYSIZE(idxbuf)*sizeof(unsigned short));
 
 
-	gfxContext.SetDynamicDescriptor(2, 0, manualVertexBuffer.GetSRV());
 
+	gfxContext.SetDynamicDescriptor(2, 0, manualVertexBuffer.GetSRV());
 	gfxContext.SetIndexBuffer(manualIndexBuffer.IndexBufferView());
+
+
+
+	
+	m_dummyTextures[0] = grid_texture->GetSRV();
+	m_dummyTextures[1] = default_specular_texture->GetSRV();
+	m_dummyTextures[2]= grid_texture->GetSRV();
+	m_dummyTextures[3] = default_normal_texture->GetSRV();
+	m_dummyTextures[4]= grid_texture->GetSRV();
+	m_dummyTextures[5]= grid_texture->GetSRV();
+
+	gfxContext.SetDynamicDescriptors(3, 0, 6, m_dummyTextures);
 
 
 	gfxContext.SetConstants(5, 0);
@@ -1306,6 +1318,13 @@ void GameEngineImpl::Startup(void)
 	TextureManager::Initialize(L"Textures/");
 
 
+	grid_texture = TextureManager::LoadDDSFromFile("grid.dds", true);
+	grid_texture->WaitForLoad();
+	default_normal_texture = TextureManager::LoadDDSFromFile("default_normal.dds", true);
+	default_normal_texture->WaitForLoad();
+
+	default_specular_texture = TextureManager::LoadDDSFromFile("default_specular.dds", true);
+	default_specular_texture->WaitForLoad();
 
 
 
