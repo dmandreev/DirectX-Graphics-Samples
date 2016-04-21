@@ -552,12 +552,20 @@ void GameEngineImpl::RenderObjects(GraphicsContext& gfxContext, const Matrix4& V
 	Vector3 c(0,100,0);
 
 	Vector3 normal(0, 0, 1);
+	Vector3 tangent(1, 0, 0);
+	Vector3 bitangent(0, 1, 0);
 
 	auto rotation = OrthogonalTransform::MakeYRotation(IM_PI/4*3);
+
+	auto rot1 = OrthogonalTransform::MakeXRotation(IM_PI / 4 * total_time);
+	rotation = rotation*rot1;
+
 	a = rotation*a;
 	b = rotation*b;
 	c = rotation*c;
 	normal = rotation*normal;
+	tangent = rotation*tangent;
+	bitangent = rotation*bitangent;
 
 	auto translation=OrthogonalTransform::MakeTranslation(Vector3(350, 200, 150));
 	
@@ -569,30 +577,33 @@ void GameEngineImpl::RenderObjects(GraphicsContext& gfxContext, const Matrix4& V
 
 
 
+	auto c1 = cos(total_time);
+	auto c2 = cos(total_time+1);
+	auto c3 = cos(total_time+2);
 	
 	__declspec(align(16))
 	  VSInput input[3] = {
 		{
 			{ a.GetX(),a.GetY(),a.GetZ() }, // position
 			{0,1},   //texcoord0
-			{ normal.GetX(),normal.GetY(),normal.GetZ() }, // normal
-			{ 0,0,0}, // tangent
-			{ 0,0,0 }, // bitangent
+			{ normal.GetX(),normal.GetY(),normal.GetZ()}, // normal
+			{ tangent.GetX(),tangent.GetY(),tangent.GetZ()}, // tangent
+			{ bitangent.GetX(),bitangent.GetY(),bitangent.GetZ() }, // bitangent
 		},
 		{
 			{ b.GetX() ,b.GetY(),b.GetZ() }, // position
 			{ 1,1 }, //texcoord0
 			{ normal.GetX(),normal.GetY(),normal.GetZ() }, // normal
-			{ 0,0,0 }, // tangent
-			{ 0,0,0 }, // bitangent
+			{ tangent.GetX(),tangent.GetY(),tangent.GetZ() }, // tangent
+			{ bitangent.GetX(),bitangent.GetY(),bitangent.GetZ() }, // bitangent
 		}
 		,
 		{
 			{ c.GetX(),c.GetY(),c.GetZ() }, // position
 			{ 0,0 }, //texcoord0
 			{ normal.GetX(),normal.GetY(),normal.GetZ() }, // normal
-			{ 0,0,0 }, // tangent
-			{ 0,0,0 }, // bitangent
+			{ tangent.GetX(),tangent.GetY(),tangent.GetZ() }, // tangent
+			{ bitangent.GetX(),bitangent.GetY(),bitangent.GetZ() }, // bitangent
 		}
 	};
 
