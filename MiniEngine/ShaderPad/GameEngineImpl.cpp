@@ -613,6 +613,7 @@ void GameEngineImpl::RenderObjects(GraphicsContext& gfxContext, const Matrix4& V
 	gfxContext.WriteBuffer(manualVertexBuffer, 0, &input, _ARRAYSIZE(input)*sizeof(VSInput));
 	gfxContext.WriteBuffer(manualIndexBuffer, 0, &idxbuf, _ARRAYSIZE(idxbuf)*sizeof(unsigned short));
 
+	gfxContext.TransitionResource(manualIndexBuffer, D3D12_RESOURCE_STATE_INDEX_BUFFER, true);
 
 
 	gfxContext.SetDynamicDescriptor(2, 0, manualVertexBuffer.GetSRV());
@@ -962,6 +963,9 @@ void GameEngineImpl::RenderUI(class GraphicsContext& gfxContext)
 				
 				gfxContext.WriteBuffer(imguiVertexBuffer, 0, &cmd_list->VtxBuffer[0], verticesSize);
 				gfxContext.WriteBuffer(imguiIndexBuffer, 0, &cmd_list->IdxBuffer[0], indicesSize);
+
+				gfxContext.TransitionResource(imguiIndexBuffer, D3D12_RESOURCE_STATE_INDEX_BUFFER, true);
+				gfxContext.TransitionResource(imguiVertexBuffer, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER, true);
 
 				gfxContext.SetVertexBuffer(0, imguiVertexBuffer.VertexBufferView());
 				gfxContext.SetIndexBuffer(imguiIndexBuffer.IndexBufferView());
