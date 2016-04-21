@@ -339,6 +339,7 @@ void GameEngineImpl::Update(float deltaT)
 					HRESULT hr = S_FALSE;
 
 						hr = D3DCompile(txt.data(), txt.length(), "ps.hlsl", Shader_Macros, &include_handler, "main", "ps_5_1", //"ps_5_0" "ps_3_0", 
+				
 #ifdef _DEBUG
 							D3DCOMPILE_DEBUG
 							//D3DCOMPILE_OPTIMIZATION_LEVEL2 | D3DCOMPILE_SKIP_VALIDATION | D3DCOMPILE_SKIP_OPTIMIZATION
@@ -347,6 +348,7 @@ void GameEngineImpl::Update(float deltaT)
 							D3DCOMPILE_OPTIMIZATION_LEVEL2 | D3DCOMPILE_SKIP_VALIDATION //| D3DCOMPILE_SKIP_OPTIMIZATION
 #endif
 							, 0, &blob, &errors);
+
 
 
 
