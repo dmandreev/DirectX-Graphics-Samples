@@ -1411,19 +1411,7 @@ void GameEngineImpl::Startup(void)
 
 	//bool ok = false;
 
-	ASSERT(m_Model.Load("Models/sponza.h3d"), "Failed to load model");
-	ASSERT(m_Model.m_Header.meshCount > 0, "Model contains no meshes");
-
-	CreateParticleEffects();
-
-
-	//movaps      xmmword ptr [rax-08h],xmm11
-	//ASSERT(Math::IsAligned(a, 16));
-
-
-	float modelRadius = Length(m_Model.m_Header.boundingBox.max - m_Model.m_Header.boundingBox.min) * .5f;
-	const Vector3 eye = (m_Model.m_Header.boundingBox.min + m_Model.m_Header.boundingBox.max)
-		* .4f + Vector3(modelRadius * .3f, 0.0f, 0.0f);
+	const Vector3 eye = (520, 100, -30);
 
 	m_Camera.SetEyeAtUp(eye, Vector3(kZero), Vector3(kYUnitVector));
 	m_Camera.SetZRange(1.0f, 10000.0f);
@@ -1440,4 +1428,29 @@ void GameEngineImpl::Startup(void)
 	PostEffects::MaxExposure = 8.0f;
 	PostEffects::BloomThreshold = 1.0f;
 	PostEffects::BloomStrength = 0.10f;
+
+
+	auto t = create_task([this]()-> void
+	{
+
+		ASSERT(m_Model.Load("Models/sponza.h3d"), "Failed to load model");
+		ASSERT(m_Model.m_Header.meshCount > 0, "Model contains no meshes");
+
+		CreateParticleEffects();
+
+
+		//movaps      xmmword ptr [rax-08h],xmm11
+		//ASSERT(Math::IsAligned(a, 16));
+
+
+		float modelRadius = Length(m_Model.m_Header.boundingBox.max - m_Model.m_Header.boundingBox.min) * .5f;
+		const Vector3 eye = (m_Model.m_Header.boundingBox.min + m_Model.m_Header.boundingBox.max)
+			* .4f + Vector3(modelRadius * .3f, 0.0f, 0.0f);
+
+		m_Camera.SetEyeAtUp(eye, Vector3(kZero), Vector3(kYUnitVector));
+		m_Camera.SetZRange(1.0f, 10000.0f);
+		m_pCameraController = new CameraController(m_Camera, Vector3(kYUnitVector));
+		initialized = true;
+	});
+
 };
