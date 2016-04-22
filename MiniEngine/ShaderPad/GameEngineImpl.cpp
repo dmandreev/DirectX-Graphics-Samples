@@ -632,6 +632,9 @@ void GameEngineImpl::RenderObjects(GraphicsContext& gfxContext, const Matrix4& V
 
 void GameEngineImpl::RenderScene(void)
 {
+	if (!initialized)
+		return;
+
 	GraphicsContext& gfxContext = GraphicsContext::Begin(L"Scene Render");
 
 	ParticleEffects::Update(gfxContext.GetComputeContext(), Graphics::GetFrameTime());

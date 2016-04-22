@@ -182,4 +182,6 @@ private:
 
 	float total_time = 0;
 
+
+	bool initialized = false;
 };
