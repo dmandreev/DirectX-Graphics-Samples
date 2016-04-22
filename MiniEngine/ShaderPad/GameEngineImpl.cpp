@@ -552,12 +552,20 @@ void GameEngineImpl::RenderObjects(GraphicsContext& gfxContext, const Matrix4& V
 	Vector3 c(0,100,0);
 
 	Vector3 normal(0, 0, 1);
+	Vector3 tangent(1, 0, 0);
+	Vector3 bitangent(0, 1, 0);
 
 	auto rotation = OrthogonalTransform::MakeYRotation(IM_PI/4*3);
+
+	auto rot1 = OrthogonalTransform::MakeXRotation(IM_PI / 4 * total_time);
+	rotation = rotation*rot1;
+
 	a = rotation*a;
 	b = rotation*b;
 	c = rotation*c;
 	normal = rotation*normal;
+	tangent = rotation*tangent;
+	bitangent = rotation*bitangent;
 
 	auto translation=OrthogonalTransform::MakeTranslation(Vector3(350, 200, 150));
 	
@@ -569,30 +577,33 @@ void GameEngineImpl::RenderObjects(GraphicsContext& gfxContext, const Matrix4& V
 
 
 
+	auto c1 = cos(total_time);
+	auto c2 = cos(total_time+1);
+	auto c3 = cos(total_time+2);
 	
 	__declspec(align(16))
 	  VSInput input[3] = {
 		{
 			{ a.GetX(),a.GetY(),a.GetZ() }, // position
 			{0,1},   //texcoord0
-			{ normal.GetX(),normal.GetY(),normal.GetZ() }, // normal
-			{ 0,0,0}, // tangent
-			{ 0,0,0 }, // bitangent
+			{ normal.GetX(),normal.GetY(),normal.GetZ()}, // normal
+			{ tangent.GetX(),tangent.GetY(),tangent.GetZ()}, // tangent
+			{ bitangent.GetX(),bitangent.GetY(),bitangent.GetZ() }, // bitangent
 		},
 		{
 			{ b.GetX() ,b.GetY(),b.GetZ() }, // position
 			{ 1,1 }, //texcoord0
 			{ normal.GetX(),normal.GetY(),normal.GetZ() }, // normal
-			{ 0,0,0 }, // tangent
-			{ 0,0,0 }, // bitangent
+			{ tangent.GetX(),tangent.GetY(),tangent.GetZ() }, // tangent
+			{ bitangent.GetX(),bitangent.GetY(),bitangent.GetZ() }, // bitangent
 		}
 		,
 		{
 			{ c.GetX(),c.GetY(),c.GetZ() }, // position
 			{ 0,0 }, //texcoord0
 			{ normal.GetX(),normal.GetY(),normal.GetZ() }, // normal
-			{ 0,0,0 }, // tangent
-			{ 0,0,0 }, // bitangent
+			{ tangent.GetX(),tangent.GetY(),tangent.GetZ() }, // tangent
+			{ bitangent.GetX(),bitangent.GetY(),bitangent.GetZ() }, // bitangent
 		}
 	};
 
@@ -602,6 +613,7 @@ void GameEngineImpl::RenderObjects(GraphicsContext& gfxContext, const Matrix4& V
 	gfxContext.WriteBuffer(manualVertexBuffer, 0, &input, _ARRAYSIZE(input)*sizeof(VSInput));
 	gfxContext.WriteBuffer(manualIndexBuffer, 0, &idxbuf, _ARRAYSIZE(idxbuf)*sizeof(unsigned short));
 
+	gfxContext.TransitionResource(manualIndexBuffer, D3D12_RESOURCE_STATE_INDEX_BUFFER, true);
 
 
 	gfxContext.SetDynamicDescriptor(2, 0, manualVertexBuffer.GetSRV());
@@ -954,6 +966,9 @@ void GameEngineImpl::RenderUI(class GraphicsContext& gfxContext)
 				
 				gfxContext.WriteBuffer(imguiVertexBuffer, 0, &cmd_list->VtxBuffer[0], verticesSize);
 				gfxContext.WriteBuffer(imguiIndexBuffer, 0, &cmd_list->IdxBuffer[0], indicesSize);
+
+				gfxContext.TransitionResource(imguiIndexBuffer, D3D12_RESOURCE_STATE_INDEX_BUFFER, true);
+				gfxContext.TransitionResource(imguiVertexBuffer, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER, true);
 
 				gfxContext.SetVertexBuffer(0, imguiVertexBuffer.VertexBufferView());
 				gfxContext.SetIndexBuffer(imguiIndexBuffer.IndexBufferView());
