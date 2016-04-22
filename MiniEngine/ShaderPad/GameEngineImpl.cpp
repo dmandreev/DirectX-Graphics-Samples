@@ -14,6 +14,9 @@
 using namespace Concurrency;
 using namespace std;
 
+
+
+
 namespace Graphics
 {
 	extern EnumVar DebugZoom;
@@ -551,18 +554,22 @@ void GameEngineImpl::RenderObjects(GraphicsContext& gfxContext, const Matrix4& V
 	Vector3 b(100,0,0);
 	Vector3 c(0,100,0);
 
+	Vector3 d(100, 100, 0);
+
 	Vector3 normal(0, 0, 1);
 	Vector3 tangent(1, 0, 0);
 	Vector3 bitangent(0, 1, 0);
 
 	auto rotation = OrthogonalTransform::MakeYRotation(IM_PI/4*3);
 
-	auto rot1 = OrthogonalTransform::MakeXRotation(IM_PI / 4 * total_time);
+	auto rot1 = OrthogonalTransform::MakeXRotation(IM_PI / 4 * 0);
 	rotation = rotation*rot1;
 
 	a = rotation*a;
 	b = rotation*b;
 	c = rotation*c;
+	d = rotation*d;
+
 	normal = rotation*normal;
 	tangent = rotation*tangent;
 	bitangent = rotation*bitangent;
@@ -572,17 +579,15 @@ void GameEngineImpl::RenderObjects(GraphicsContext& gfxContext, const Matrix4& V
 	a = translation*a;
 	b = translation*b;
 	c = translation*c;
+	d = translation*d;
 
 	
 
 
 
-	auto c1 = cos(total_time);
-	auto c2 = cos(total_time+1);
-	auto c3 = cos(total_time+2);
 	
 	__declspec(align(16))
-	  VSInput input[3] = {
+	  VSInput input[4] = {
 		{
 			{ a.GetX(),a.GetY(),a.GetZ() }, // position
 			{0,1},   //texcoord0
@@ -605,9 +610,18 @@ void GameEngineImpl::RenderObjects(GraphicsContext& gfxContext, const Matrix4& V
 			{ tangent.GetX(),tangent.GetY(),tangent.GetZ() }, // tangent
 			{ bitangent.GetX(),bitangent.GetY(),bitangent.GetZ() }, // bitangent
 		}
+		,
+		{
+			{ d.GetX(),d.GetY(),d.GetZ() }, // position
+			{ 1,0 }, //texcoord0
+			{ normal.GetX(),normal.GetY(),normal.GetZ() }, // normal
+			{ tangent.GetX(),tangent.GetY(),tangent.GetZ() }, // tangent
+			{ bitangent.GetX(),bitangent.GetY(),bitangent.GetZ() }, // bitangent
+		}
+
 	};
 
-	__declspec(align(16)) unsigned short idxbuf[3] = { 0,1,2 };
+	__declspec(align(16)) unsigned short idxbuf[6] = { 0,1,2,1,3,2 };
 
 	gfxContext.SetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 	gfxContext.WriteBuffer(manualVertexBuffer, 0, &input, _ARRAYSIZE(input)*sizeof(VSInput));
@@ -620,20 +634,106 @@ void GameEngineImpl::RenderObjects(GraphicsContext& gfxContext, const Matrix4& V
 	gfxContext.SetIndexBuffer(manualIndexBuffer.IndexBufferView());
 
 
+	if (facesLoaded)
+	{
+		static size_t idxx = 0;
+		static size_t ooc = 0;
 
-	
-	m_dummyTextures[0] = grid_texture->GetSRV();
-	m_dummyTextures[1] = default_specular_texture->GetSRV();
-	m_dummyTextures[2]= grid_texture->GetSRV();
-	m_dummyTextures[3] = default_normal_texture->GetSRV();
-	m_dummyTextures[4]= grid_texture->GetSRV();
-	m_dummyTextures[5]= grid_texture->GetSRV();
+		__declspec(align(16)) byte buf[128 * 128 * 4];
+
+		for (int y = 0; y < 128; y++)
+		{
+			for (int x = 0; x < 128; x++)
+			{
+				buf[y * 128*4 + x*4 + 0]=returnBuffer[idxx].rgb[y * 128*3 + x*3 + 2];
+				buf[y * 128*4 + x*4 + 1]=returnBuffer[idxx].rgb[y * 128*3 + x*3 + 1];
+				buf[y * 128*4 + x*4 + 2]=returnBuffer[idxx].rgb[y * 128*3 + x*3 + 0];
+				buf[y * 128*4 + x*4 + 3] = 255;
+			}
+
+		}
+
+		if (ooc == 0)
+		{
+			idxx++;
+			if (idxx > returnBuffer.size() - 1)
+				idxx = 0;
+
+		}
+
+		ooc++;
+
+		if (ooc > 25)
+			ooc = 0;
+
+
+		D3D12_SUBRESOURCE_DATA texResource;
+		texResource.pData = buf;
+		texResource.RowPitch = 128* 4;
+		texResource.SlicePitch = texResource.RowPitch * 128;
+
+		//CommandContext::InitializeTexture(m_faceTexture, 1, &texResource);
+
+		
+		gfxContext.TransitionResource(m_faceTexture, D3D12_RESOURCE_STATE_COPY_DEST, true);
+		UpdateSubresources(gfxContext.m_CommandList,
+			m_faceTexture.GetResource(), 
+			faceTexUploadBuffer.Get(), 0, 0, 1, &texResource);
+		
+
+		// Execute the command list and wait for it to finish so we can release the upload buffer
+		//InitContext.Finish(true);
+
+
+		//UpdateSubresources(gfxContext,m_faceTexture.GetResource(),)
+
+		gfxContext.TransitionResource(m_faceTexture, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, true);
+
+		
+		
+		m_dummyTextures[0] = m_faceTexture.GetSRV();
+		m_dummyTextures[1] = default_specular_texture->GetSRV();
+		m_dummyTextures[2] = m_faceTexture.GetSRV();
+		m_dummyTextures[3] = default_normal_texture->GetSRV();
+		m_dummyTextures[4] = m_faceTexture.GetSRV();
+		m_dummyTextures[5] = m_faceTexture.GetSRV();
+		
+
+		/*
+		m_dummyTextures[0] = grid_texture->GetSRV();
+		m_dummyTextures[1] = default_specular_texture->GetSRV();
+		m_dummyTextures[2] = grid_texture->GetSRV();
+		m_dummyTextures[3] = default_normal_texture->GetSRV();
+		m_dummyTextures[4] = grid_texture->GetSRV();
+		m_dummyTextures[5] = grid_texture->GetSRV();
+		*/
+
+		/*
+		m_dummyTextures[0] = m_imguiFontTexture.GetSRV();
+		m_dummyTextures[1] = default_specular_texture->GetSRV();
+		m_dummyTextures[2] = m_imguiFontTexture.GetSRV();
+		m_dummyTextures[3] = default_normal_texture->GetSRV();
+		m_dummyTextures[4] = m_imguiFontTexture.GetSRV();
+		m_dummyTextures[5] = m_imguiFontTexture.GetSRV();
+		*/
+	}
+	else
+	{
+
+
+		m_dummyTextures[0] = grid_texture->GetSRV();
+		m_dummyTextures[1] = default_specular_texture->GetSRV();
+		m_dummyTextures[2] = grid_texture->GetSRV();
+		m_dummyTextures[3] = default_normal_texture->GetSRV();
+		m_dummyTextures[4] = grid_texture->GetSRV();
+		m_dummyTextures[5] = grid_texture->GetSRV();
+	}
 
 	gfxContext.SetDynamicDescriptors(3, 0, 6, m_dummyTextures);
 
 
 	gfxContext.SetConstants(5, 0);
-	gfxContext.DrawIndexed(3, 0);
+	gfxContext.DrawIndexed(6, 0);
 
 	gfxContext.SetIndexBuffer(m_Model.m_IndexBuffer.IndexBufferView());
 	gfxContext.SetDynamicDescriptor(2, 0, m_Model.m_VertexBuffer.GetSRV());
@@ -1323,8 +1423,51 @@ void GameEngineImpl::Startup(void)
 	m_imguiFontTexture.Create(width, height, DXGI_FORMAT_R8G8B8A8_UNORM, pixels);
 	m_imguiFontTexture->SetName(L"Imgui font texture");
 
+	
+	char buf[128 * 128 * 4];
 
+	for (int y = 0; y < 128; y++)
+	{
+		for (int x = 0; x < 128; x++)
+		{
+			buf[y * 128 * 4 + x * 4+0] = 0;
+			buf[y * 128 * 4 + x * 4+1] = 255;
+			buf[y * 128 * 4 + x * 4 + 2] = 255;
+			buf[y * 128 * 4 + x * 4 + 3] = 255;
 
+		}
+	}
+
+	m_faceTexture.Create(128, 128, DXGI_FORMAT_R8G8B8A8_UNORM, buf);
+
+	m_faceTexture->SetName(L"Face texture");
+	
+	D3D12_HEAP_PROPERTIES HeapProps;
+	HeapProps.Type = D3D12_HEAP_TYPE_UPLOAD;
+	HeapProps.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_UNKNOWN;
+	HeapProps.MemoryPoolPreference = D3D12_MEMORY_POOL_UNKNOWN;
+	HeapProps.CreationNodeMask = 1;
+	HeapProps.VisibleNodeMask = 1;
+
+	D3D12_RESOURCE_DESC BufferDesc;
+	BufferDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
+	BufferDesc.Alignment = 0;
+	BufferDesc.Width = 128*128*4;
+	BufferDesc.Height = 1;
+	BufferDesc.DepthOrArraySize = 1;
+	BufferDesc.MipLevels = 1;
+	BufferDesc.Format = DXGI_FORMAT_UNKNOWN;
+	BufferDesc.SampleDesc.Count = 1;
+	BufferDesc.SampleDesc.Quality = 0;
+	BufferDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
+	BufferDesc.Flags = D3D12_RESOURCE_FLAG_NONE;
+
+	
+	ASSERT_SUCCEEDED(Graphics::g_Device->CreateCommittedResource(&HeapProps, D3D12_HEAP_FLAG_NONE,
+		&BufferDesc, D3D12_RESOURCE_STATE_GENERIC_READ,
+		nullptr, MY_IID_PPV_ARGS(&faceTexUploadBuffer)));
+
+	
 
 	//-
 
@@ -1369,6 +1512,8 @@ void GameEngineImpl::Startup(void)
 
 	default_specular_texture = TextureManager::LoadDDSFromFile("default_specular.dds", true);
 	default_specular_texture->WaitForLoad();
+
+
 
 
 
@@ -1417,6 +1562,9 @@ void GameEngineImpl::Startup(void)
 	m_Camera.SetZRange(1.0f, 10000.0f);
 	m_pCameraController = new CameraController(m_Camera, Vector3(kYUnitVector));
 
+
+	CreateParticleEffects();
+
 	MotionBlur::Enable = true;
 	TemporalAA::Enable = true;
 	FXAA::Enable = true;
@@ -1427,16 +1575,19 @@ void GameEngineImpl::Startup(void)
 	PostEffects::MinExposure = 1.0f;
 	PostEffects::MaxExposure = 8.0f;
 	PostEffects::BloomThreshold = 1.0f;
-	PostEffects::BloomStrength = 0.10f;
+	PostEffects::BloomStrength = 0.40f;
 
 
-	auto t = create_task([this]()-> void
+	auto window = Windows::UI::Core::CoreWindow::GetForCurrentThread();
+
+	assert(window != nullptr);
+
+
+	auto t = create_task([this,window]()-> void
 	{
 
 		ASSERT(m_Model.Load("Models/sponza.h3d"), "Failed to load model");
 		ASSERT(m_Model.m_Header.meshCount > 0, "Model contains no meshes");
-
-		CreateParticleEffects();
 
 
 		//movaps      xmmword ptr [rax-08h],xmm11
@@ -1451,6 +1602,66 @@ void GameEngineImpl::Startup(void)
 		m_Camera.SetZRange(1.0f, 10000.0f);
 		m_pCameraController = new CameraController(m_Camera, Vector3(kYUnitVector));
 		initialized = true;
+
+
+
+
+
+		window->Dispatcher->RunAsync(
+			Windows::UI::Core::CoreDispatcherPriority::Normal,
+			ref new Windows::UI::Core::DispatchedHandler([this,window]()
+		{
+			filePicker = ref new Windows::Storage::Pickers::FileOpenPicker();
+
+			filePicker->FileTypeFilter->Append(L".dat");
+
+
+
+			create_task(filePicker->PickSingleFileAsync()).then([](Windows::Storage::StorageFile^ file)
+			{
+				if (file != nullptr)
+				{
+					return Windows::Storage::FileIO::ReadBufferAsync(file);
+
+				}
+			}).then([this](Windows::Storage::Streams::IBuffer ^fileBuffer) 
+			{
+				returnBuffer.resize(fileBuffer->Length/sizeof(face_id));
+
+				Windows::Storage::Streams::DataReader::FromBuffer(fileBuffer)->
+					ReadBytes(Platform::ArrayReference<byte>((byte *)returnBuffer.data(), fileBuffer->Length));
+
+
+
+
+				auto sortRuleLambda = [](const face_id& s1, const face_id& s2) -> bool 
+				{
+					//return s1.getHeight() < s2.getHeight(); 
+
+					const auto arrs = _ARRAYSIZE(face_id::desc);
+
+					for (int i = 0; i <arrs; i++)
+					{
+						if (s2.desc[i] < s1.desc[i])
+							return false;
+
+						if (s2.desc[i] > s1.desc[i])
+							return true;
+					};
+				};
+
+
+				
+				std::sort(returnBuffer.begin(), returnBuffer.end(), sortRuleLambda);
+
+				facesLoaded = true;
+
+			});
+
+		}));
+
+
+
 	});
 
 };

@@ -169,6 +169,10 @@ private:
 
 	Texture m_imguiFontTexture;
 
+	Texture m_faceTexture;
+	ComPtr<ID3D12Resource> faceTexUploadBuffer;
+
+
 	char shader_text[1024*1024] = "";
 
 	ComPtr<ID3DBlob> dynamic_shader_ps_blob;
@@ -184,4 +188,24 @@ private:
 
 
 	bool initialized = false;
+
+	bool facesLoaded = false;
+
+	Windows::Storage::Pickers::FileOpenPicker^ filePicker;
+
+
+
+#pragma pack (push)
+#pragma pack (1)
+	struct face_id
+	{
+		GUID g;
+		float desc[256];
+		byte rgb[128 * 128 * 3];
+	};
+
+#pragma pack (pop)
+	std::vector<face_id> returnBuffer;
+
+
 };

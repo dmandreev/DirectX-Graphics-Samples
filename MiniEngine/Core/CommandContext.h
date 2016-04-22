@@ -137,13 +137,14 @@ public:
 
 	void SetPredication(ID3D12Resource* Buffer, UINT64 BufferOffset, D3D12_PREDICATION_OP Op);
 
+	ID3D12GraphicsCommandList* m_CommandList;
+
 protected:
 
 	void FinishTimeStampQueryBatch();
 	void BindDescriptorHeaps( void );
 
 	CommandListManager* m_OwningManager;
-	ID3D12GraphicsCommandList* m_CommandList;
 	ID3D12CommandAllocator* m_CurrentAllocator;
 
 	ID3D12RootSignature* m_CurGraphicsRootSignature;
