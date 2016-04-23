@@ -178,6 +178,8 @@ void App::OnKeyDown(
 				CoreWindow::GetForCurrentThread()->PointerCursor = nullptr;
 				m_tracking = true;
 			}
+
+			gameEngineImpl.tracking = m_tracking;
 		}));
 
 	}
@@ -306,7 +308,6 @@ void App::Run()
 			{
 				GameCore::UpdateApplication(gameEngineImpl);
 				memset(&s_MouseState, 0, sizeof(s_MouseState));
-
 
 			}
 		}

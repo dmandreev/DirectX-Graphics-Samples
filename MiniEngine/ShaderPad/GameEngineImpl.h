@@ -70,10 +70,13 @@ public:
 	virtual void RenderScene(void) override;
 	virtual void Startup(void) override;
 
+	bool tracking=false;
 private:
 
 	float m_dpi = 96.0f;
 	bool pointerPressed = false;
+
+	
 
 	void RenderObjects(GraphicsContext& Context, const Matrix4& ViewProjMat);
 	void CreateParticleEffects()

@@ -235,10 +235,11 @@ void GameEngineImpl::Update(float deltaT)
 
 	static bool showUI = true;
 
-	static bool escapehitlock = true;
+	//static bool escapehitlock = true;
 	static bool editorHasFocus = false;
 
 	//messy, but works
+	/*
 	if (io.KeysDown[VK_ESCAPE])
 	{
 		if (escapehitlock)
@@ -249,6 +250,17 @@ void GameEngineImpl::Update(float deltaT)
 			escapehitlock = false;
 		}
 	}
+	*/
+
+	if (tracking)
+	{
+		showUI = false;
+	}
+	else
+	{
+		showUI = true;
+		editorHasFocus = false;
+	}
 
 
 	//GImGui->Style.WindowPadding.x;
@@ -257,10 +269,6 @@ void GameEngineImpl::Update(float deltaT)
 	
 	//ImGuiStyle::ImGuiStyle::WindowPadding = ImVec2(0, 0);
 
-	if (!escapehitlock)
-	{
-		escapehitlock = io.KeysDown[VK_ESCAPE] == false;
-	}
 
 	if (showUI)
 	{
@@ -553,7 +561,6 @@ void GameEngineImpl::RenderObjects(GraphicsContext& gfxContext, const Matrix4& V
 	Vector3 a(0,0,0);
 	Vector3 b(100,0,0);
 	Vector3 c(0,100,0);
-
 	Vector3 d(100, 100, 0);
 
 	Vector3 normal(0, 0, 1);
@@ -562,7 +569,7 @@ void GameEngineImpl::RenderObjects(GraphicsContext& gfxContext, const Matrix4& V
 
 	auto rotation = OrthogonalTransform::MakeYRotation(IM_PI/4*3);
 
-	auto rot1 = OrthogonalTransform::MakeXRotation(IM_PI / 4 * 0);
+	auto rot1 = OrthogonalTransform::MakeXRotation(IM_PI / 4 * total_time);
 	rotation = rotation*rot1;
 
 	a = rotation*a;
@@ -621,7 +628,7 @@ void GameEngineImpl::RenderObjects(GraphicsContext& gfxContext, const Matrix4& V
 
 	};
 
-	__declspec(align(16)) unsigned short idxbuf[6] = { 0,1,2,1,3,2 };
+	__declspec(align(16)) unsigned short idxbuf[12] = { 0,1,2,1,3,2,1,0,2,2,3,1 };
 
 	gfxContext.SetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 	gfxContext.WriteBuffer(manualVertexBuffer, 0, &input, _ARRAYSIZE(input)*sizeof(VSInput));
@@ -1653,6 +1660,25 @@ void GameEngineImpl::Startup(void)
 
 				
 				std::sort(returnBuffer.begin(), returnBuffer.end(), sortRuleLambda);
+
+
+				
+				vector<int> array_of_ints;
+
+				auto sortLambda = [](const int &a, const int &b)-> bool
+				{
+					return a < b;
+				};
+
+				std::sort(array_of_ints.begin(), array_of_ints.end(), sortLambda);
+
+				//or anonymous
+				std::sort(array_of_ints.begin(), array_of_ints.end(), 
+					[](const int &a, const int &b)-> bool
+					{
+						return a < b;
+					});
+
 
 				facesLoaded = true;
 
