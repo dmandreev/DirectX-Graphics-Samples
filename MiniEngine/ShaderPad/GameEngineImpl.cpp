@@ -547,200 +547,219 @@ void GameEngineImpl::RenderObjects(GraphicsContext& gfxContext, const Matrix4& V
 		gfxContext.DrawIndexed(indexCount, startIndex);
 #endif
 	}
-/*
-	struct VSInput
-	{
-		float3 position;
-		float2 texcoord0;
-		float3 normal;
-		float3 tangent;
-		float3 bitangent;
-	};
-*/
-
-	Vector3 a(0,0,0);
-	Vector3 b(100,0,0);
-	Vector3 c(0,100,0);
-	Vector3 d(100, 100, 0);
-
-	Vector3 normal(0, 0, 1);
-	Vector3 tangent(1, 0, 0);
-	Vector3 bitangent(0, 1, 0);
-
-	auto rotation = OrthogonalTransform::MakeYRotation(IM_PI/4*3);
-
-	auto rot1 = OrthogonalTransform::MakeXRotation(IM_PI / 4 * total_time);
-	rotation = rotation*rot1;
-
-	a = rotation*a;
-	b = rotation*b;
-	c = rotation*c;
-	d = rotation*d;
-
-	normal = rotation*normal;
-	tangent = rotation*tangent;
-	bitangent = rotation*bitangent;
-
-	auto translation=OrthogonalTransform::MakeTranslation(Vector3(350, 200, 150));
-	
-	a = translation*a;
-	b = translation*b;
-	c = translation*c;
-	d = translation*d;
-
-	
-
-
-
-	
-	__declspec(align(16))
-	  VSInput input[4] = {
+	/*
+		struct VSInput
 		{
-			{ a.GetX(),a.GetY(),a.GetZ() }, // position
-			{0,1},   //texcoord0
-			{ normal.GetX(),normal.GetY(),normal.GetZ()}, // normal
-			{ tangent.GetX(),tangent.GetY(),tangent.GetZ()}, // tangent
-			{ bitangent.GetX(),bitangent.GetY(),bitangent.GetZ() }, // bitangent
-		},
-		{
-			{ b.GetX() ,b.GetY(),b.GetZ() }, // position
-			{ 1,1 }, //texcoord0
-			{ normal.GetX(),normal.GetY(),normal.GetZ() }, // normal
-			{ tangent.GetX(),tangent.GetY(),tangent.GetZ() }, // tangent
-			{ bitangent.GetX(),bitangent.GetY(),bitangent.GetZ() }, // bitangent
-		}
-		,
-		{
-			{ c.GetX(),c.GetY(),c.GetZ() }, // position
-			{ 0,0 }, //texcoord0
-			{ normal.GetX(),normal.GetY(),normal.GetZ() }, // normal
-			{ tangent.GetX(),tangent.GetY(),tangent.GetZ() }, // tangent
-			{ bitangent.GetX(),bitangent.GetY(),bitangent.GetZ() }, // bitangent
-		}
-		,
-		{
-			{ d.GetX(),d.GetY(),d.GetZ() }, // position
-			{ 1,0 }, //texcoord0
-			{ normal.GetX(),normal.GetY(),normal.GetZ() }, // normal
-			{ tangent.GetX(),tangent.GetY(),tangent.GetZ() }, // tangent
-			{ bitangent.GetX(),bitangent.GetY(),bitangent.GetZ() }, // bitangent
-		}
-
-	};
-
-	__declspec(align(16)) unsigned short idxbuf[12] = { 0,1,2,1,3,2,1,0,2,2,3,1 };
-
-	gfxContext.SetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-	gfxContext.WriteBuffer(manualVertexBuffer, 0, &input, _ARRAYSIZE(input)*sizeof(VSInput));
-	gfxContext.WriteBuffer(manualIndexBuffer, 0, &idxbuf, _ARRAYSIZE(idxbuf)*sizeof(unsigned short));
-
-	gfxContext.TransitionResource(manualIndexBuffer, D3D12_RESOURCE_STATE_INDEX_BUFFER, true);
-
-
-	gfxContext.SetDynamicDescriptor(2, 0, manualVertexBuffer.GetSRV());
-	gfxContext.SetIndexBuffer(manualIndexBuffer.IndexBufferView());
-
+			float3 position;
+			float2 texcoord0;
+			float3 normal;
+			float3 tangent;
+			float3 bitangent;
+		};
+	*/
 
 	if (facesLoaded)
 	{
-		static size_t idxx = 0;
-		static size_t ooc = 0;
 
-		__declspec(align(16)) byte buf[128 * 128 * 4];
+		const int vertexCount = 4;
+		const int idxCount = 6;
 
-		for (int y = 0; y < 128; y++)
+		__declspec(align(16)) unsigned short *idxbufptr;
+		__declspec(align(16)) VSInput *inputptr;
+
+
+
+		Vector3 a(0, 0, 0);
+		Vector3 b(100, 0, 0);
+		Vector3 c(0, 100, 0);
+		Vector3 d(100, 100, 0);
+
+		Vector3 normal(0, 0, 1);
+		Vector3 tangent(1, 0, 0);
+		Vector3 bitangent(0, 1, 0);
+
+		auto rotation = OrthogonalTransform::MakeYRotation(IM_PI / 4 * 3);
+
+		auto rot1 = OrthogonalTransform::MakeXRotation(3*IM_PI  * total_time);
+		rotation = rotation*rot1;
+
+		a = rotation*a;
+		b = rotation*b;
+		c = rotation*c;
+		d = rotation*d;
+
+		normal = rotation*normal;
+		tangent = rotation*tangent;
+		bitangent = rotation*bitangent;
+
+		auto translation = OrthogonalTransform::MakeTranslation(Vector3(350, 200, 150));
+
+		a = translation*a;
+		b = translation*b;
+		c = translation*c;
+		d = translation*d;
+
+
+
+
+
+
+		__declspec(align(16))
+			VSInput input[vertexCount] = {
+			  {
+				  { a.GetX(),a.GetY(),a.GetZ() }, // position
+				  {0,1},   //texcoord0
+				  { normal.GetX(),normal.GetY(),normal.GetZ()}, // normal
+				  { tangent.GetX(),tangent.GetY(),tangent.GetZ()}, // tangent
+				  { bitangent.GetX(),bitangent.GetY(),bitangent.GetZ() }, // bitangent
+			  },
+			  {
+				  { b.GetX() ,b.GetY(),b.GetZ() }, // position
+				  { 1,1 }, //texcoord0
+				  { normal.GetX(),normal.GetY(),normal.GetZ() }, // normal
+				  { tangent.GetX(),tangent.GetY(),tangent.GetZ() }, // tangent
+				  { bitangent.GetX(),bitangent.GetY(),bitangent.GetZ() }, // bitangent
+			  }
+			  ,
+			  {
+				  { c.GetX(),c.GetY(),c.GetZ() }, // position
+				  { 0,0 }, //texcoord0
+				  { normal.GetX(),normal.GetY(),normal.GetZ() }, // normal
+				  { tangent.GetX(),tangent.GetY(),tangent.GetZ() }, // tangent
+				  { bitangent.GetX(),bitangent.GetY(),bitangent.GetZ() }, // bitangent
+			  }
+			  ,
+			  {
+				  { d.GetX(),d.GetY(),d.GetZ() }, // position
+				  { 1,0 }, //texcoord0
+				  { normal.GetX(),normal.GetY(),normal.GetZ() }, // normal
+				  { tangent.GetX(),tangent.GetY(),tangent.GetZ() }, // tangent
+				  { bitangent.GetX(),bitangent.GetY(),bitangent.GetZ() }, // bitangent
+			  }
+
+		};
+
+		__declspec(align(16)) unsigned short idxbuf[idxCount] = { 0,1,2,1,3,2 };// , 1, 0, 2, 2, 3, 1 };
+
+
+		inputptr = &input[0];
+		idxbufptr = &idxbuf[0];
+
+
+
+		gfxContext.SetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+		gfxContext.WriteBuffer(manualVertexBuffer, 0, inputptr, vertexCount*sizeof(VSInput));
+		gfxContext.WriteBuffer(manualIndexBuffer, 0, idxbufptr, idxCount*sizeof(unsigned short));
+
+		gfxContext.TransitionResource(manualIndexBuffer, D3D12_RESOURCE_STATE_INDEX_BUFFER, true);
+
+
+		gfxContext.SetDynamicDescriptor(2, 0, manualVertexBuffer.GetSRV());
+		gfxContext.SetIndexBuffer(manualIndexBuffer.IndexBufferView());
+
+
+		if (facesLoaded)
 		{
-			for (int x = 0; x < 128; x++)
+			static size_t idxx = 0;
+			static size_t ooc = 0;
+
+			__declspec(align(16)) byte buf[128 * 128 * 4];
+
+			for (int y = 0; y < 128; y++)
 			{
-				buf[y * 128*4 + x*4 + 0]=returnBuffer[idxx].rgb[y * 128*3 + x*3 + 2];
-				buf[y * 128*4 + x*4 + 1]=returnBuffer[idxx].rgb[y * 128*3 + x*3 + 1];
-				buf[y * 128*4 + x*4 + 2]=returnBuffer[idxx].rgb[y * 128*3 + x*3 + 0];
-				buf[y * 128*4 + x*4 + 3] = 255;
+				for (int x = 0; x < 128; x++)
+				{
+					buf[y * 128 * 4 + x * 4 + 0] = returnBuffer[idxx].rgb[y * 128 * 3 + x * 3 + 2];
+					buf[y * 128 * 4 + x * 4 + 1] = returnBuffer[idxx].rgb[y * 128 * 3 + x * 3 + 1];
+					buf[y * 128 * 4 + x * 4 + 2] = returnBuffer[idxx].rgb[y * 128 * 3 + x * 3 + 0];
+					buf[y * 128 * 4 + x * 4 + 3] = 255;
+				}
+
 			}
 
-		}
+			if (ooc == 0)
+			{
+				idxx++;
+				if (idxx > returnBuffer.size() - 1)
+					idxx = 0;
 
-		if (ooc == 0)
+			}
+
+			ooc++;
+
+			if (ooc > 25)
+				ooc = 0;
+
+
+			D3D12_SUBRESOURCE_DATA texResource;
+			texResource.pData = buf;
+			texResource.RowPitch = 128 * 4;
+			texResource.SlicePitch = texResource.RowPitch * 128;
+
+			//CommandContext::InitializeTexture(m_faceTexture, 1, &texResource);
+
+
+			gfxContext.TransitionResource(m_faceTexture, D3D12_RESOURCE_STATE_COPY_DEST, true);
+			UpdateSubresources(gfxContext.m_CommandList,
+				m_faceTexture.GetResource(),
+				faceTexUploadBuffer.Get(), 0, 0, 1, &texResource);
+
+
+			// Execute the command list and wait for it to finish so we can release the upload buffer
+			//InitContext.Finish(true);
+
+
+			//UpdateSubresources(gfxContext,m_faceTexture.GetResource(),)
+
+			gfxContext.TransitionResource(m_faceTexture, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, true);
+
+
+
+			m_dummyTextures[0] = m_faceTexture.GetSRV();
+			m_dummyTextures[1] = default_specular_texture->GetSRV();
+			m_dummyTextures[2] = m_faceTexture.GetSRV();
+			m_dummyTextures[3] = default_normal_texture->GetSRV();
+			m_dummyTextures[4] = m_faceTexture.GetSRV();
+			m_dummyTextures[5] = m_faceTexture.GetSRV();
+
+
+			/*
+			m_dummyTextures[0] = grid_texture->GetSRV();
+			m_dummyTextures[1] = default_specular_texture->GetSRV();
+			m_dummyTextures[2] = grid_texture->GetSRV();
+			m_dummyTextures[3] = default_normal_texture->GetSRV();
+			m_dummyTextures[4] = grid_texture->GetSRV();
+			m_dummyTextures[5] = grid_texture->GetSRV();
+			*/
+
+			/*
+			m_dummyTextures[0] = m_imguiFontTexture.GetSRV();
+			m_dummyTextures[1] = default_specular_texture->GetSRV();
+			m_dummyTextures[2] = m_imguiFontTexture.GetSRV();
+			m_dummyTextures[3] = default_normal_texture->GetSRV();
+			m_dummyTextures[4] = m_imguiFontTexture.GetSRV();
+			m_dummyTextures[5] = m_imguiFontTexture.GetSRV();
+			*/
+		}
+		else
 		{
-			idxx++;
-			if (idxx > returnBuffer.size() - 1)
-				idxx = 0;
 
+
+			m_dummyTextures[0] = grid_texture->GetSRV();
+			m_dummyTextures[1] = default_specular_texture->GetSRV();
+			m_dummyTextures[2] = grid_texture->GetSRV();
+			m_dummyTextures[3] = default_normal_texture->GetSRV();
+			m_dummyTextures[4] = grid_texture->GetSRV();
+			m_dummyTextures[5] = grid_texture->GetSRV();
 		}
 
-		ooc++;
-
-		if (ooc > 25)
-			ooc = 0;
+		gfxContext.SetDynamicDescriptors(3, 0, 6, m_dummyTextures);
 
 
-		D3D12_SUBRESOURCE_DATA texResource;
-		texResource.pData = buf;
-		texResource.RowPitch = 128* 4;
-		texResource.SlicePitch = texResource.RowPitch * 128;
+		gfxContext.SetConstants(5, 0);
+		gfxContext.DrawIndexed(idxCount, 0);
 
-		//CommandContext::InitializeTexture(m_faceTexture, 1, &texResource);
-
-		
-		gfxContext.TransitionResource(m_faceTexture, D3D12_RESOURCE_STATE_COPY_DEST, true);
-		UpdateSubresources(gfxContext.m_CommandList,
-			m_faceTexture.GetResource(), 
-			faceTexUploadBuffer.Get(), 0, 0, 1, &texResource);
-		
-
-		// Execute the command list and wait for it to finish so we can release the upload buffer
-		//InitContext.Finish(true);
-
-
-		//UpdateSubresources(gfxContext,m_faceTexture.GetResource(),)
-
-		gfxContext.TransitionResource(m_faceTexture, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, true);
-
-		
-		
-		m_dummyTextures[0] = m_faceTexture.GetSRV();
-		m_dummyTextures[1] = default_specular_texture->GetSRV();
-		m_dummyTextures[2] = m_faceTexture.GetSRV();
-		m_dummyTextures[3] = default_normal_texture->GetSRV();
-		m_dummyTextures[4] = m_faceTexture.GetSRV();
-		m_dummyTextures[5] = m_faceTexture.GetSRV();
-		
-
-		/*
-		m_dummyTextures[0] = grid_texture->GetSRV();
-		m_dummyTextures[1] = default_specular_texture->GetSRV();
-		m_dummyTextures[2] = grid_texture->GetSRV();
-		m_dummyTextures[3] = default_normal_texture->GetSRV();
-		m_dummyTextures[4] = grid_texture->GetSRV();
-		m_dummyTextures[5] = grid_texture->GetSRV();
-		*/
-
-		/*
-		m_dummyTextures[0] = m_imguiFontTexture.GetSRV();
-		m_dummyTextures[1] = default_specular_texture->GetSRV();
-		m_dummyTextures[2] = m_imguiFontTexture.GetSRV();
-		m_dummyTextures[3] = default_normal_texture->GetSRV();
-		m_dummyTextures[4] = m_imguiFontTexture.GetSRV();
-		m_dummyTextures[5] = m_imguiFontTexture.GetSRV();
-		*/
 	}
-	else
-	{
-
-
-		m_dummyTextures[0] = grid_texture->GetSRV();
-		m_dummyTextures[1] = default_specular_texture->GetSRV();
-		m_dummyTextures[2] = grid_texture->GetSRV();
-		m_dummyTextures[3] = default_normal_texture->GetSRV();
-		m_dummyTextures[4] = grid_texture->GetSRV();
-		m_dummyTextures[5] = grid_texture->GetSRV();
-	}
-
-	gfxContext.SetDynamicDescriptors(3, 0, 6, m_dummyTextures);
-
-
-	gfxContext.SetConstants(5, 0);
-	gfxContext.DrawIndexed(6, 0);
 
 	gfxContext.SetIndexBuffer(m_Model.m_IndexBuffer.IndexBufferView());
 	gfxContext.SetDynamicDescriptor(2, 0, m_Model.m_VertexBuffer.GetSRV());
